@@ -1,0 +1,320 @@
+---
+title: "Incendios Forestales en California" 
+format: dashboard
+server: shiny
+theme: united
+---
+
+```{r}
+#| label: carga-bibliotecas
+#| context: setup
+#| warning: false
+#| message: false
+
+# Carga de bibliotecas
+library(tidyverse)
+library(readxl)
+library(DT)
+library(plotly)
+library(sf)
+library(terra)
+library(tmap)
+library(shiny)
+library(scales)
+
+# Especificar modo interactivo para tmap
+tmap_mode("view")
+```
+
+
+```{r}
+#| label: carga-datos
+#| context: data 
+#| warning: false
+#| message: false
+
+# Carga de Datos 
+
+# Registros de incendios: 
+datos_incendios <- 
+  read.csv("incendios-ca-historicos.csv")
+
+```
+
+# {.sidebar}
+
+```{r}
+#| label: selectinput
+
+# Lista ordenada de provincias con un elemento adicional = "Todas"
+cause_list<- unique(datos_incendios$CAUSE)
+cause_list<- sort(cause_list)
+cause_list<- c("Todos", cause_list)
+
+# Widget de lista de selección ("selectInput") de provincias
+selectInput(
+  inputId = "firename",      # identificador del widget
+  label = "Causa del Incendio",        # etiqueta de la lista (la que ve el usuario)
+  choices = cause_list, # lista de opciones para seleccionar de la lista
+  selected = "Todos"          # opción seleccionada por defecto
+)
+```
+
+
+```{r}
+#| label: slider-temp
+
+# Temperatura mínima y temperatura máxima 
+temp_minima <- min(datos_incendios$TEMPERATURE_2M_ALARM_DATE)
+temp_maxima<- max(datos_incendios$TEMPERATURE_2M_ALARM_DATE)
+
+# Cálculo de un rango inicial dinámico (central del 50% del rango)
+rango_inicial <- c(
+  round(temp_minima + 0.40 * (temp_maxima - temp_minima)),
+  round(temp_minima + 0.60 * (temp_maxima - temp_minima))
+)
+
+# Widget deslizador de selección ("sliderInput") de temperatura
+sliderInput(
+  inputId = "temperatura",
+  label = "Temperatura",
+  min = temp_minima,   
+  max = temp_maxima,   
+  value = rango_inicial, 
+  step    = 1,    
+  round   = TRUE, 
+  sep     = ""    
+)
+```
+
+# Tabla
+
+```{r}
+#| label: salida-tabla
+#| title: "Tabla"
+
+# Tabla
+dataTableOutput(
+    outputId =  "tabla" # identificador del widget
+)
+```
+
+
+# Gráficos Estadísticos
+
+## {.tabset}
+
+```{r}
+#| label: salida-grafico
+#| title: "Distribución de los incendios"
+
+# Gráfico 1
+plotlyOutput(
+    outputId =  "grafico" # identificador del widget
+)
+
+
+```
+
+
+
+```{r}
+#| label: salida-grafico2
+#| title: "Temperaturas por Incendio"
+
+# Gráfico 2
+plotlyOutput(
+    outputId =  "grafico2" # identificador del widget
+)
+
+
+```
+
+
+# Mapa 
+
+```{r}
+#| label: salida-mapa
+#| title: "Mapa"
+
+
+# Mapa
+tmapOutput(
+    outputId =  "mapa" # identificador del widget
+)
+```
+
+
+```{r}
+#| label: servidor
+#| context: server
+
+# Función reactiva para filtrar los datos
+# de acuerdo con los filtros especificados por el usuario
+filtrar_datos <- reactive({
+  # Para comenzar, se toman los datos sin filtrar
+  datos_filtrados <- datos_incendios
+ 
+  
+  # Filtro por causas de origen 
+  if (input$firename != "Todos") {
+    datos_filtrados <-
+      datos_filtrados |>
+      filter(CAUSE == input$firename)
+  }
+  
+   # Filtro por temperatura
+  datos_filtrados <-
+    datos_filtrados |>
+    filter(TEMPERATURE_2M_ALARM_DATE >= input$temperatura[1] & 
+       TEMPERATURE_2M_ALARM_DATE <= input$temperatura[2])
+  
+  return(datos_filtrados)
+}) 
+
+ 
+  # Función reactiva para filtrar la capa espacial según los datos filtrados
+poligonos_filtrados <- reactive({
+  datos <- filtrar_datos()
+
+  # Unir datos filtrados con la capa espacial según el ID
+  poligonos_filtrados <- poligonos_incendios |>
+    semi_join(datos, by = "OBJECTID")
+
+  return(poligonos_filtrados)
+})
+
+# Creación de funciones para generar salidas 
+output$tabla <- renderDataTable({
+  # Filtrado del conjunto de datos
+  datos_filtrados <- filtrar_datos()
+  
+   # Definir la tabla
+  tabla <- 
+    datos_filtrados |>
+      st_drop_geometry() |>
+      dplyr::select(OBJECTID, YEAR_, FIRE_NAME, CAUSE, TEMPERATURE_2M_ALARM_DATE) |>
+      arrange(desc(TEMPERATURE_2M_ALARM_DATE)) |>                 
+      datatable(
+        rownames = FALSE,
+        colnames = c("ID", "Año", "Nombre del Incendio", "Causa", "Temperatura (C)"),
+        options = list(                 
+          pageLength = 8,
+          language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
+        )    
+      )
+  
+  # Mostrar la tabla
+  tabla
+})
+
+
+
+
+# Definición de gráficos
+
+# Creación del gráfico 1 
+output$grafico <- renderPlotly({
+  # Filtrado del conjunto de datos
+  datos_filtrados <- filtrar_datos()
+  
+  # Definir el gráfico ggplot2
+histograma <- 
+  ggplot(datos_filtrados, aes(
+    x = GIS_ACRES,
+    text = paste("Acres quemados:", GIS_ACRES, "<br>")
+    )) +
+  geom_histogram(binwidth =0.1 , fill = "darkred", color = "black") +
+  scale_x_log10(labels = comma_format(accuracy = 1)) +
+  xlab("Área quemada (acres, escala log10)") +
+  ylab("Cantidad de incendios") +
+  theme_minimal()
+  
+ # Mostrar el gráfico plotly
+  ggplotly(histograma, tooltip = "text") |> 
+    config(locale = 'es')
+})
+
+
+# Creación del gráfico 2
+
+
+output$grafico2 <- renderPlotly({
+  # Filtrado del conjunto de datos
+  datos_filtrados <- filtrar_datos()
+
+  
+# Definición del gráfico 2. 
+grafico2 <- 
+datos_filtrados |>
+    ggplot(aes(x = reorder(FIRE_NAME, TEMPERATURE_2M_ALARM_DATE), y = TEMPERATURE_2M_ALARM_DATE )) +
+  geom_col(
+    aes(
+      text = paste0(
+        "Incendio: ", FIRE_NAME, "\n",
+        "Temperatura (C): ", round(TEMPERATURE_2M_ALARM_DATE, 2)
+      )
+    ), 
+   fill = "darkred"  
+    ) +
+  xlab("Nombre del Incendio") +
+  ylab("Temperatura (C)") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+   # Mostrar el gráfico plotly
+  ggplotly(grafico2, tooltip = "text") |> 
+    config(locale = 'es')
+})
+
+#   Carga de Datos para el mapa 
+# Capa vectorial, polígonos de incendios: 
+poligonos_incendios <- 
+  st_read("incendios-ca-historicos.geojson", quiet = TRUE) |>
+  filter(GIS_ACRES >= 1000)
+
+
+# Capa raster, temperaturas de los incendios: 
+
+temperatura <- rast("california-temperatura.tif")
+
+# Mapa interactivo
+output$mapa <- renderTmap({
+  # Filtrado del conjunto de datos espaciales
+  incendios_filtrados <- poligonos_filtrados()
+  
+  # Validación: si no hay datos filtrados, mostrar solo el raster
+  if (nrow(incendios_filtrados) == 0) {
+    return(
+      tm_shape(temperatura, name = "Temperatura") +
+        tm_raster(palette = "Greys", title = "Temperatura (°C)") +
+        tm_borders(col = "black", lwd = 0.5) +
+        tm_scale_bar(position = c("left", "bottom"))
+    )
+  }
+
+  # Definir el mapa completo
+  tm_shape(temperatura, name = "Temperatura") +
+    tm_raster(
+      palette = c("lightblue", "brown", "orange", "red"), 
+      title = "Temperatura (°C)"
+    ) +
+    tm_shape(incendios_filtrados, name = "Incendios") +
+      tm_fill(
+        fill = "TEMPERATURE_2M_ALARM_DATE",
+        fill.scale = tm_scale_intervals(
+          style  = "quantile",
+          values = "Reds"
+        ),
+        fill.legend = tm_legend(title = "Temperatura"),
+        id = "FIRE_NAME",
+        popup.vars  = c(
+          "Temperatura:" = "TEMPERATURE_2M_ALARM_DATE"
+        )
+      ) +
+    tm_borders(col = "black", lwd = 0.5) +
+    tm_scale_bar(position = c("left", "bottom"))
+})
+```
