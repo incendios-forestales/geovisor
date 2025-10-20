@@ -1,0 +1,216 @@
+---
+title: "Incendios forestales en Costa Rica" 
+format: dashboard
+server: shiny
+theme: united
+---
+
+```{r}
+#| label: carga-bibliotecas
+#| context: setup
+#| warning: false
+#| message: false
+
+# Carga de bibliotecas
+library(tidyverse)
+library(DT)
+library(plotly)
+library(sf)
+library(tmap)
+library(shiny)
+library(scales)
+
+# Especificar modo interactivo para tmap
+tmap_mode("view")
+```
+
+```{r}
+#| label: carga-datos
+#| context: data 
+#| warning: false
+#| message: false
+
+# Carga de Datos 
+
+# Registros de incendios: 
+datos_incendios <- 
+  st_read("incendios-cr-modis.gpkg", quiet = TRUE) |>
+  filter(confidence >= 90)
+```
+
+# {.sidebar}
+
+```{r}
+#| label: selectinput
+
+# Lista ordenada de satélites con un elemento adicional = "Todos"
+satellite_list <- unique(datos_incendios$satellite)
+satellite_list <- sort(satellite_list)
+satellite_list <- c("Todos", satellite_list)
+
+# Widget de lista de selección ("selectInput") de satélites
+selectInput(
+  inputId  = "satellite",    # identificador del widget
+  label    = "Satélite",     # etiqueta de la lista (la que ve el usuario)
+  choices  = satellite_list, # lista de opciones para seleccionar de la lista
+  selected = "Todos"         # opción seleccionada por defecto
+)
+```
+
+```{r}
+#| label: slider-temp
+
+# FRP mínimo y máximo 
+frp_minimo <- min(datos_incendios$frp, na.rm = TRUE)
+frp_maximo <- max(datos_incendios$frp, na.rm = TRUE)
+
+# Widget deslizador de selección ("sliderInput") de FRP
+sliderInput(
+  inputId = "frp",
+  label   = "Potencia radiativa del fuego - FRP (MW)",
+  min     = frp_minimo,   
+  max     = frp_maximo,   
+  value   = c(frp_minimo, frp_maximo), 
+  step    = 1,    
+  round   = TRUE, 
+  sep     = ""    
+)
+```
+
+# Mapa 
+
+```{r}
+#| label: salida-mapa
+#| title: "Mapa"
+
+# Mapa
+tmapOutput(
+    outputId =  "mapa"
+)
+```
+
+# Gráficos estadísticos
+
+```{r}
+#| label: salida-grafico
+#| title: "Distribución de la FRP"
+
+# Gráfico 1
+plotlyOutput(
+    outputId =  "grafico" # identificador del widget
+)
+```
+
+# Tabla
+
+```{r}
+#| label: salida-tabla
+#| title: "Tabla"
+
+# Tabla
+dataTableOutput(
+    outputId =  "tabla"
+)
+```
+
+```{r}
+#| label: servidor
+#| context: server
+
+# Función reactiva para filtrar los datos
+# de acuerdo con los filtros especificados por el usuario
+filtrar_datos <- reactive({
+  # Para comenzar, se toman los datos sin filtrar
+  datos_filtrados <- datos_incendios
+ 
+  
+  # Filtro por satélite
+  if (input$satellite != "Todos") {
+    datos_filtrados <-
+      datos_filtrados |>
+      filter(satellite == input$satellite)
+  }
+  
+  # Filtro por FRP
+  datos_filtrados <-
+    datos_filtrados |>
+    filter(frp >= input$frp[1] & frp <= input$frp[2])
+  
+  return(datos_filtrados)
+}) 
+
+ 
+# Creación de funciones para generar salidas 
+output$tabla <- renderDataTable({
+  # Filtrado del conjunto de datos
+  datos_filtrados <- filtrar_datos()
+  
+   # Definir la tabla
+  tabla <- 
+    datos_filtrados |>
+      st_drop_geometry() |>
+      dplyr::select(acq_date, acq_time, daynight, satellite, frp, brightness, bright_t31, confidence) |>
+      arrange(desc(acq_date)) |>                 
+      datatable(
+        rownames = FALSE,
+        colnames = c("Fecha", "Hora", "Día/Noche", "Satélite", "FRP (MW)", "Brillantez", "Brillo T31", "Confianza"),
+        options = list(                 
+          pageLength = 10,
+          language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
+        )    
+      )
+  
+  # Mostrar la tabla
+  tabla
+})
+
+
+# Definición de gráficos
+
+# Creación del gráfico 1 
+output$grafico <- renderPlotly({
+  # Filtrado del conjunto de datos
+  datos_filtrados <- filtrar_datos()
+  
+  # Definir el gráfico ggplot2
+histograma <- 
+  ggplot(datos_filtrados, aes(
+    x = frp,
+    text = paste("FRP: ", frp, "(MW)", "<br>")
+    )) +
+  geom_histogram(binwidth =0.1 , fill = "darkred", color = "black") +
+  scale_x_log10(labels = comma_format(accuracy = 1)) +
+  xlab("FRP (MW)") +
+  ylab("Cantidad de incendios") +
+  theme_minimal()
+  
+ # Mostrar el gráfico plotly
+  ggplotly(histograma, tooltip = "text") |> 
+    config(locale = 'es')
+})
+
+
+# Mapa interactivo
+output$mapa <- renderTmap({
+  # Filtrado del conjunto de datos espaciales
+  incendios_filtrados <- filtrar_datos()
+  
+# Definir el mapa completo
+tm_shape(incendios_filtrados, name = "Incendios") +
+  tm_dots(
+    fill = "frp",
+    fill.scale = tm_scale_intervals(
+      style  = "quantile",
+      values = "inferno"
+    ),
+    fill.legend = tm_legend(title = "FRP (MW)"),
+    size = 0.5,
+    id = "frp",
+    popup.vars  = c(
+      "FRP (MW):" = "frp"
+    )
+  ) +
+  tm_borders(col = "black", lwd = 0.5) +
+  tm_scale_bar(position = c("left", "bottom"))
+})
+```
