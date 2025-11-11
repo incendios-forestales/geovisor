@@ -26,7 +26,7 @@ tmap_mode("view")
 
 # Parámetros generales
 CONFIANZA_MINIMA          <- 100
-CONFIANZA_MINIMA_ABSOLUTA <- 90
+CONFIANZA_MINIMA_ABSOLUTA <- 0
 FECHA_MINIMA <- "2001-01-01"
 FECHA_MAXIMA <- "2024-12-31"
 ```
@@ -249,6 +249,17 @@ plotlyOutput(
 )
 ```
 
+```{r}
+#| label: salida-grafico-cantidad-incendios-anio-mes
+#| title: "Cantidad de incendios por año y mes"
+#| eval: true
+
+# Gráfico
+plotOutput(
+    outputId =  "grafico_cantidad_incendios_anio_mes"
+)
+```
+
 # Registros de incendios
 
 ```{r}
@@ -455,6 +466,19 @@ output$grafico_cantidad_incendios_anio <- renderPlotly({
   # Filtrar el conjunto de datos
   incendios_filtrados <- filtrar_incendios()
   
+  # Verificar si hay datos después del filtrado
+  if (nrow(incendios_filtrados) == 0) {
+    # Retornar un gráfico vacío con mensaje
+    return(
+      plotly::plot_ly() |>
+        plotly::layout(
+          title = "No hay datos para mostrar con los filtros seleccionados",
+          xaxis = list(title = "Año"),
+          yaxis = list(title = "Cantidad de incendios")
+        )
+    )
+  }
+  
   # Incendios agrupados por año
   incendios_por_anio <-
     incendios_filtrados |>
@@ -468,8 +492,10 @@ output$grafico_cantidad_incendios_anio <- renderPlotly({
       .groups = "drop"
     )
   
-  cortes_anios <- c(2001, 2005, 2010, 2015, 2020, 2024)
-  lim_x <- range(cortes_anios)
+  # Obtener los límites del eje x basados en los datos filtrados
+  anio_minimo <- year(min(incendios_filtrados$acq_date, na.rm = TRUE))
+  anio_maximo <- year(max(incendios_filtrados$acq_date, na.rm = TRUE))
+  lim_x <- c(anio_minimo, anio_maximo)
   
   # Serie base con tooltips
   serie_na <-
@@ -485,45 +511,132 @@ output$grafico_cantidad_incendios_anio <- renderPlotly({
   # Datos para líneas de tendencia (ignorar NA)
   df_n <- tidyr::drop_na(serie_na, n)
   
-  pred_n <- tibble::tibble(
-    anio = df_n$anio,
-    yhat = predict(stats::lm(n ~ anio, data = df_n), newdata = df_n)
-  )
+  # Solo crear línea de tendencia si hay al menos 2 puntos
+  if (nrow(df_n) > 1) {
+    pred_n <- tibble::tibble(
+      anio = df_n$anio,
+      yhat = predict(stats::lm(n ~ anio, data = df_n), newdata = df_n)
+    )
+  } else {
+    pred_n <- NULL
+  }
   
-  # Plotly con doble eje (izq: área; der: cantidad)
+  # Plotly con línea de incendios
   fig <- plotly::plot_ly() |>
     plotly::add_lines(
-    data = serie_na,
-    x = ~anio, y = ~n,
-    name = "Cantidad de incendios",
-    line = list(color = "red", width = 2)
-  ) |>
-  plotly::add_lines(
-    data = pred_n, x = ~anio, y = ~yhat,
-    showlegend = FALSE,
-    line = list(color ="red", dash = "dash", width = 1)
-  ) |>
-  plotly::layout(
-    xaxis = list(
-      title = "Año",
-      tickvals = cortes_anios,
-      range = c(min(lim_x), max(lim_x))
-    ),
-    yaxis2 = list(
-      title = list(text = "Cantidad de incendios", standoff = 16),
-      overlaying = "y",
-      side = "right",
-      tickformat = ",.0f",
-      automargin = TRUE
-    ),
-    legend = list(orientation = "h", x = 0, y = 1.15),
-    margin = list(t = 90, r = 80, b = 60, l = 60)
-  ) |>
-  plotly::config(locale = "es", displayModeBar = TRUE)
+      data = serie_na,
+      x = ~anio, y = ~n,
+      name = "Cantidad de incendios",
+      line = list(color = "red", width = 2),
+      hovertemplate = ~tt_n
+    )
+  
+  # Agregar línea de tendencia solo si existe
+  if (!is.null(pred_n)) {
+    fig <- fig |>
+      plotly::add_lines(
+        data = pred_n, x = ~anio, y = ~yhat,
+        name = "Tendencia",
+        showlegend = TRUE,
+        line = list(color = "red", dash = "dash", width = 1),
+        hovertemplate = "Tendencia<extra></extra>"
+      )
+  }
+  
+  # Configurar el layout con límites del eje x dinámicos
+  fig <- fig |>
+    plotly::layout(
+      xaxis = list(
+        title = "Año",
+        range = lim_x,  # Aplicar los límites dinámicos
+        dtick = 1       # Mostrar cada año
+      ),
+      yaxis = list(
+        title = "Cantidad de incendios",
+        tickformat = ",.0f",
+        automargin = TRUE
+      ),
+      legend = list(orientation = "h", x = 0, y = 1.15),
+      margin = list(t = 90, r = 80, b = 60, l = 60)
+    ) |>
+    plotly::config(locale = "es", displayModeBar = TRUE)
 
   fig
 })
 
+# Gráfico interactivo de cantidad de incendios por año
+output$grafico_cantidad_incendios_anio_mes <- renderPlot({
+  # Filtrar el conjunto de datos
+  incendios_filtrados <- filtrar_incendios()
+  
+  # Incendios agrupados por año y mes
+  incendios_por_anio_mes <-
+    incendios_filtrados |>
+    mutate(
+      anio = year(acq_date),
+      mes  = month(acq_date, label = TRUE, abbr = TRUE)
+    ) |>
+    group_by(anio, mes) |>
+    summarize(
+      n                                         = n(),
+      .groups                                   = "drop"
+    )
+
+  # Asegurar que los meses queden en orden enero-diciembre
+  incendios_por_anio_mes$mes <- factor(
+    incendios_por_anio_mes$mes,
+    levels = month(ymd("2025-01-01") + months(0:11), label = TRUE, abbr = TRUE)
+  )
+  
+  # Traducir las abreviaturas de los meses a español
+  incendios_por_anio_mes <-
+    incendios_por_anio_mes |>
+      mutate(
+        mes = factor(
+          mes,
+          levels = month.abb,
+          labels = c("Ene", "Feb", "Mar", "Abr", "May", "Jun",
+                     "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+        )
+      )
+  
+  # Heatmap
+  g <-
+    ggplot(
+      incendios_por_anio_mes,
+      aes(
+        x = mes,
+        y = factor(anio),
+        fill = n,
+        text = paste0(
+          "Año: ", anio,
+          "<br>Mes: ", mes,
+          "<br>Cantidad de incendios: ", n
+        )
+      )
+    ) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c(name = "Incendios", option = "inferno", direction = -1) +
+    labs(
+      x = "Mes",
+      y = "Año"
+    ) +
+    theme_minimal(base_size = 10) +
+    theme(
+      panel.grid = element_blank(),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+  
+  # Convertir a gráfico interactivo plotly
+  # g_interactivo <- 
+  #   ggplotly(g, tooltip = "text", height = 700) |> 
+  #   config(locale = 'es')
+  
+  # Mostrar gráfico
+  g
+  
+})
+  
 # Mapa interactivo
 output$mapa <- renderTmap({
   # Filtrar conjuntos de datos
