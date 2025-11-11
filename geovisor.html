@@ -63,20 +63,21 @@ ul.task-list li input[type="checkbox"] {
         
       </div>
     </div>
-<div id="dashboard-collapse" class="navbar-collapse collapse"><ul class="navbar-nav navbar-nav-scroll me-auto" role="tablist"><li class="nav-item" role="presentation"><a id="tab-mapa" class="nav-link active" data-bs-toggle="tab" role="tab" data-bs-target="#mapa" data-scrolling="false" href="#mapa" aria-controls="mapa" aria-selected="true"><span class="nav-link-text">Mapa</span></a></li><li class="nav-item" role="presentation"><a id="tab-tabla" class="nav-link" data-bs-toggle="tab" role="tab" data-bs-target="#tabla" data-scrolling="false" href="#tabla" aria-controls="tabla" aria-selected="false"><span class="nav-link-text">Tabla</span></a></li></ul></div></div>
+<div id="dashboard-collapse" class="navbar-collapse collapse"><ul class="navbar-nav navbar-nav-scroll me-auto" role="tablist"><li class="nav-item" role="presentation"><a id="tab-análisis-espacial" class="nav-link active" data-bs-toggle="tab" role="tab" data-bs-target="#análisis-espacial" data-scrolling="false" href="#análisis-espacial" aria-controls="análisis-espacial" aria-selected="true"><span class="nav-link-text">Análisis espacial</span></a></li><li class="nav-item" role="presentation"><a id="tab-análisis-temporal" class="nav-link" data-bs-toggle="tab" role="tab" data-bs-target="#análisis-temporal" data-scrolling="false" href="#análisis-temporal" aria-controls="análisis-temporal" aria-selected="false"><span class="nav-link-text">Análisis temporal</span></a></li><li class="nav-item" role="presentation"><a id="tab-registros-de-incendios" class="nav-link" data-bs-toggle="tab" role="tab" data-bs-target="#registros-de-incendios" data-scrolling="false" href="#registros-de-incendios" aria-controls="registros-de-incendios" aria-selected="false"><span class="nav-link-text">Registros de incendios</span></a></li></ul></div></div>
 </nav>
 </header>
 <div class="page-layout-custom quarto-dashboard-content bslib-gap-spacing html-fill-container bslib-page-fill quarto-dashboard-pages dashboard-sidebar-container">  
 
-<div class="bslib-sidebar-layout html-fill-item html-fill-container" data-bslib-sidebar-open="desktop" data-bslib-sidebar-init="true" data-bslib-sidebar-border="false" data-bslib-sidebar-border-radius="false"><div class="main html-fill-container html-fill-item"><div class="sidebar-content html-fill-item html-fill-container">
+<div class="bslib-sidebar-layout html-fill-item html-fill-container" data-bslib-sidebar-open="desktop" data-bslib-sidebar-init="true" style=" --bslib-sidebar-width: 15%" data-bslib-sidebar-border="false" data-bslib-sidebar-border-radius="false"><div class="main html-fill-container html-fill-item"><div class="sidebar-content html-fill-item html-fill-container">
 <div class="tab-content bslib-grid html-fill-item html-fill-container" style="display: grid; grid-template-columns: minmax(3em, 1fr);
 grid-auto-rows: minmax(0, 1fr);">
-<div id="mapa" class="dashboard-page tab-pane show active html-fill-item html-fill-container" data-orientation="columns" aria-labelledby="tab-mapa">
-<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-columns: minmax(3em, 1fr);
+<div id="análisis-espacial" class="dashboard-page tab-pane show active html-fill-item html-fill-container" data-orientation="columns" aria-labelledby="tab-análisis-espacial">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-columns: minmax(3em, 75fr) minmax(3em, 25fr);
 grid-auto-rows: minmax(0, 1fr);">
-<div class="card cell html-fill-item html-fill-container bslib-card" data-title="Mapa" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, 1fr); grid-auto-columns: minmax(0, 1fr);">
+<div class="card cell html-fill-item html-fill-container bslib-card" data-title="Distribución de incendios en Áreas de Conservación (AC) y Áreas Silvestres Protegidas (ASP)" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
 <div class="card-header"><div class="card-title html-fill-item html-fill-container"><span style="display: inline">
-Mapa
+Distribución de incendios en Áreas de Conservación (AC) y Áreas Silvestres Protegidas (ASP)
 </span></div></div>
 <div class="card-body html-fill-item html-fill-container">
 <div class="cell-output-display html-fill-item html-fill-container">
@@ -89,17 +90,68 @@ Mapa
         <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="height:1em;width:1em;" aria-hidden="true" role="img"><path d="M20 5C20 4.4 19.6 4 19 4H13C12.4 4 12 3.6 12 3C12 2.4 12.4 2 13 2H21C21.6 2 22 2.4 22 3V11C22 11.6 21.6 12 21 12C20.4 12 20 11.6 20 11V5ZM4 19C4 19.6 4.4 20 5 20H11C11.6 20 12 20.4 12 21C12 21.6 11.6 22 11 22H3C2.4 22 2 21.6 2 21V13C2 12.4 2.4 12 3 12C3.6 12 4 12.4 4 13V19Z"></path></svg>
     </span>
 </bslib-tooltip><script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
-</div>
-</div><div id="tabla" class="dashboard-page tab-pane grid-skip html-fill-item html-fill-container" data-orientation="columns" aria-labelledby="tab-tabla">
-<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-columns: minmax(3em, 1fr);
-grid-auto-rows: minmax(0, 1fr);">
-<div class="card cell html-fill-item html-fill-container bslib-card" data-title="Tabla" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+</div><div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, 1fr) minmax(3em, 1fr); grid-auto-columns: minmax(0, 1fr);">
+<div class="card cell html-fill-item html-fill-container bslib-card" data-title="Cantidad de incendios en AC" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
 <div class="card-header"><div class="card-title html-fill-item html-fill-container"><span style="display: inline">
-Tabla
+Cantidad de incendios en AC
 </span></div></div>
 <div class="card-body html-fill-item html-fill-container">
 <div class="cell-output-display html-fill-item html-fill-container">
-<div class="datatables html-widget html-widget-output shiny-report-size html-fill-item html-fill-container" id="tabla" style="width:100%;height:auto;"></div>
+<div class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme html-fill-item html-fill-container" id="grafico_cantidad_incendios_ac" style="width:100%;height:400px;"></div>
+</div>
+</div>
+<bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
+    <template>Expand</template>
+    <span class="bslib-full-screen-enter badge rounded-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="height:1em;width:1em;" aria-hidden="true" role="img"><path d="M20 5C20 4.4 19.6 4 19 4H13C12.4 4 12 3.6 12 3C12 2.4 12.4 2 13 2H21C21.6 2 22 2.4 22 3V11C22 11.6 21.6 12 21 12C20.4 12 20 11.6 20 11V5ZM4 19C4 19.6 4.4 20 5 20H11C11.6 20 12 20.4 12 21C12 21.6 11.6 22 11 22H3C2.4 22 2 21.6 2 21V13C2 12.4 2.4 12 3 12C3.6 12 4 12.4 4 13V19Z"></path></svg>
+    </span>
+</bslib-tooltip><script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+<div class="card cell html-fill-item html-fill-container bslib-card" data-title="Cantidad de incendios en ASP" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+<div class="card-header"><div class="card-title html-fill-item html-fill-container"><span style="display: inline">
+Cantidad de incendios en ASP
+</span></div></div>
+<div class="card-body html-fill-item html-fill-container">
+<div class="cell-output-display html-fill-item html-fill-container">
+<div class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme html-fill-item html-fill-container" id="grafico_cantidad_incendios_asp" style="width:100%;height:400px;"></div>
+</div>
+</div>
+<bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
+    <template>Expand</template>
+    <span class="bslib-full-screen-enter badge rounded-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="height:1em;width:1em;" aria-hidden="true" role="img"><path d="M20 5C20 4.4 19.6 4 19 4H13C12.4 4 12 3.6 12 3C12 2.4 12.4 2 13 2H21C21.6 2 22 2.4 22 3V11C22 11.6 21.6 12 21 12C20.4 12 20 11.6 20 11V5ZM4 19C4 19.6 4.4 20 5 20H11C11.6 20 12 20.4 12 21C12 21.6 11.6 22 11 22H3C2.4 22 2 21.6 2 21V13C2 12.4 2.4 12 3 12C3.6 12 4 12.4 4 13V19Z"></path></svg>
+    </span>
+</bslib-tooltip><script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div>
+</div>
+</div><div id="análisis-temporal" class="dashboard-page tab-pane grid-skip html-fill-item html-fill-container" data-orientation="columns" aria-labelledby="tab-análisis-temporal">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-columns: minmax(3em, 1fr);
+grid-auto-rows: minmax(0, 1fr);">
+<div class="card cell html-fill-item html-fill-container bslib-card" data-title="Cantidad de incendios por año" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+<div class="card-header"><div class="card-title html-fill-item html-fill-container"><span style="display: inline">
+Cantidad de incendios por año
+</span></div></div>
+<div class="card-body html-fill-item html-fill-container">
+<div class="cell-output-display html-fill-item html-fill-container">
+<div class="plotly html-widget html-widget-output shiny-report-size shiny-report-theme html-fill-item html-fill-container" id="grafico_cantidad_incendios_anio" style="width:100%;height:400px;"></div>
+</div>
+</div>
+<bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
+    <template>Expand</template>
+    <span class="bslib-full-screen-enter badge rounded-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="height:1em;width:1em;" aria-hidden="true" role="img"><path d="M20 5C20 4.4 19.6 4 19 4H13C12.4 4 12 3.6 12 3C12 2.4 12.4 2 13 2H21C21.6 2 22 2.4 22 3V11C22 11.6 21.6 12 21 12C20.4 12 20 11.6 20 11V5ZM4 19C4 19.6 4.4 20 5 20H11C11.6 20 12 20.4 12 21C12 21.6 11.6 22 11 22H3C2.4 22 2 21.6 2 21V13C2 12.4 2.4 12 3 12C3.6 12 4 12.4 4 13V19Z"></path></svg>
+    </span>
+</bslib-tooltip><script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div>
+</div><div id="registros-de-incendios" class="dashboard-page tab-pane grid-skip html-fill-item html-fill-container" data-orientation="columns" aria-labelledby="tab-registros-de-incendios">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-columns: minmax(3em, 1fr);
+grid-auto-rows: minmax(0, 1fr);">
+<div class="card cell html-fill-item html-fill-container bslib-card" data-title="Registros de incendios" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+<div class="card-header"><div class="card-title html-fill-item html-fill-container"><span style="display: inline">
+Registros de incendios
+</span></div></div>
+<div class="card-body html-fill-item html-fill-container">
+<div class="cell-output-display html-fill-item html-fill-container">
+<div class="datatables html-widget html-widget-output shiny-report-size html-fill-item html-fill-container" id="tabla_registros_incendios" style="width:100%;height:auto;"></div>
 </div>
 </div>
 <bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
@@ -117,43 +169,32 @@ Tabla
 <div class="cell-output-display">
 <div class="form-group shiny-input-container no-baseline">
 <label class="control-label" id="confianza_minima-label" for="confianza_minima">Confianza mínima</label>
-<input class="js-range-slider" id="confianza_minima" data-skin="shiny" data-min="0" data-max="100" data-from="100" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number">
+<input class="js-range-slider" id="confianza_minima" data-skin="shiny" data-min="90" data-max="100" data-from="100" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number">
 </div>
 </div>
 <div class="cell-output-display">
 <div class="form-group shiny-input-container no-baseline">
 <label class="control-label" id="frp-label" for="frp">Potencia radiativa del fuego - FRP (MW)</label>
-<input class="js-range-slider" id="frp" data-skin="shiny" data-type="double" data-min="2.6" data-max="859.8" data-from="2.6" data-to="859.8" data-step="1" data-grid="true" data-grid-num="9.96744186046512" data-grid-snap="false" data-prettify-separator="" data-prettify-enabled="false" data-keyboard="true" data-drag-interval="true" data-data-type="number">
-</div>
-</div>
-<div class="cell-output-display no-overflow-x">
-<div class="form-group shiny-input-container">
-<label class="control-label" id="satelite-label" for="satelite">Satélite</label>
-<div>
-<select id="satelite" class="shiny-input-select"><option value="Todos" selected="">Todos</option>
-<option value="Aqua">Aqua</option>
-<option value="Terra">Terra</option></select>
-<script type="application/json" data-for="satelite" data-nonempty="">{"plugins":["selectize-plugin-a11y"]}</script>
-</div>
+<input class="js-range-slider" id="frp" data-skin="shiny" data-type="double" data-min="10.2" data-max="859.8" data-from="10.2" data-to="859.8" data-step="1" data-grid="true" data-grid-num="9.99529411764706" data-grid-snap="false" data-prettify-separator="" data-prettify-enabled="false" data-keyboard="true" data-drag-interval="true" data-data-type="number">
 </div>
 </div>
 <div class="cell-output-display">
 <div id="fecha" class="shiny-date-range-input form-group shiny-input-container">
 <label class="control-label" id="fecha-label" for="fecha">Fecha</label>
 <div class="input-daterange input-group input-group-sm">
-<input class="form-control" type="text" aria-labelledby="fecha-label" title="Date format: yyyy-mm-dd" data-date-language="es" data-date-week-start="1" data-date-format="yyyy-mm-dd" data-date-start-view="month" data-min-date="2024-01-01" data-max-date="2024-12-31" data-initial-date="2024-01-01" data-date-autoclose="true">
+<input class="form-control" type="text" aria-labelledby="fecha-label" title="Date format: yyyy-mm-dd" data-date-language="es" data-date-week-start="1" data-date-format="yyyy-mm-dd" data-date-start-view="month" data-min-date="2001-01-08" data-max-date="2024-05-25" data-initial-date="2001-01-08" data-date-autoclose="true">
 <span class="input-group-addon input-group-prepend input-group-append">
 <span class="input-group-text"> to </span>
 </span>
-<input class="form-control" type="text" aria-labelledby="fecha-label" title="Date format: yyyy-mm-dd" data-date-language="es" data-date-week-start="1" data-date-format="yyyy-mm-dd" data-date-start-view="month" data-min-date="2024-01-01" data-max-date="2024-12-31" data-initial-date="2024-12-31" data-date-autoclose="true">
+<input class="form-control" type="text" aria-labelledby="fecha-label" title="Date format: yyyy-mm-dd" data-date-language="es" data-date-week-start="1" data-date-format="yyyy-mm-dd" data-date-start-view="month" data-min-date="2001-01-08" data-max-date="2024-05-25" data-initial-date="2024-05-25" data-date-autoclose="true">
 </div>
 </div>
 </div>
 <div class="cell-output-display no-overflow-x">
 <div class="form-group shiny-input-container">
-<label class="control-label" id="area_conservacion-label" for="area_conservacion">Área de conservación</label>
+<label class="control-label" id="ac-label" for="ac">Área de Conservación (AC)</label>
 <div>
-<select id="area_conservacion" class="shiny-input-select"><option value="Todas" selected="">Todas</option>
+<select id="ac" class="shiny-input-select"><option value="Todas" selected="">Todas</option>
 <option value="Arenal Tempisque">Arenal Tempisque</option>
 <option value="Central">Central</option>
 <option value="Guanacaste">Guanacaste</option>
@@ -162,9 +203,45 @@ Tabla
 <option value="La Amistad Pacifico">La Amistad Pacifico</option>
 <option value="Osa">Osa</option>
 <option value="Pacifico Central">Pacifico Central</option>
-<option value="Tempisque">Tempisque</option>
-<option value="Tortuguero">Tortuguero</option></select>
-<script type="application/json" data-for="area_conservacion" data-nonempty="">{"plugins":["selectize-plugin-a11y"]}</script>
+<option value="Tempisque">Tempisque</option></select>
+<script type="application/json" data-for="ac" data-nonempty="">{"plugins":["selectize-plugin-a11y"]}</script>
+</div>
+</div>
+</div>
+<div class="cell-output-display no-overflow-x">
+<div class="form-group shiny-input-container">
+<label class="control-label" id="asp-label" for="asp">Área Silvestre Protegida (ASP)</label>
+<div>
+<select id="asp" class="shiny-input-select"><option value="Todas" selected="">Todas</option>
+<option value="HH Estero Puntarenas y Manglares Asociados">HH Estero Puntarenas y Manglares Asociados</option>
+<option value="HH Humedal Laguna Madrigal">HH Humedal Laguna Madrigal</option>
+<option value="HH Palustrino Corral de piedra">HH Palustrino Corral de piedra</option>
+<option value="HH Riberino Zapandi">HH Riberino Zapandi</option>
+<option value="HH Terraba-Sierpe">HH Terraba-Sierpe</option>
+<option value="PN Arenal">PN Arenal</option>
+<option value="PN Barra Honda">PN Barra Honda</option>
+<option value="PN Carara">PN Carara</option>
+<option value="PN Diria">PN Diria</option>
+<option value="PN Guanacaste">PN Guanacaste</option>
+<option value="PN Internacional La Amistad">PN Internacional La Amistad</option>
+<option value="PN Palo Verde">PN Palo Verde</option>
+<option value="PN Santa Rosa">PN Santa Rosa</option>
+<option value="RB Lomas de Barbudal">RB Lomas de Barbudal</option>
+<option value="RF Golfo Dulce">RF Golfo Dulce</option>
+<option value="RF Taboga">RF Taboga</option>
+<option value="RNVS Cano Negro">RNVS Cano Negro</option>
+<option value="RNVS Cipanci">RNVS Cipanci</option>
+<option value="RNVS Corredor Fronterizo">RNVS Corredor Fronterizo</option>
+<option value="RNVS Hacienda El Viejo">RNVS Hacienda El Viejo</option>
+<option value="RNVS Mata Redonda">RNVS Mata Redonda</option>
+<option value="RNVS Montana de El Tigre">RNVS Montana de El Tigre</option>
+<option value="RVS Bahia Junquillal">RVS Bahia Junquillal</option>
+<option value="ZP Caraigres">ZP Caraigres</option>
+<option value="ZP Las Tablas">ZP Las Tablas</option>
+<option value="ZP Miravalles">ZP Miravalles</option>
+<option value="ZP Peninsula de Nicoya">ZP Peninsula de Nicoya</option>
+<option value="ZP Tivives">ZP Tivives</option></select>
+<script type="application/json" data-for="asp" data-nonempty="">{"plugins":["selectize-plugin-a11y"]}</script>
 </div>
 </div>
 </div>
@@ -193,15 +270,34 @@ library(scales)
 tmap_mode("view")
 
 # Parámetros generales
-CONFIANZA_MINIMA <- 100
+CONFIANZA_MINIMA          <- 100
+CONFIANZA_MINIMA_ABSOLUTA <- 90
+FECHA_MINIMA <- "2001-01-01"
+FECHA_MAXIMA <- "2024-12-31"
 </script>
  
 <script type="application/shiny-prerendered" data-context="data">
-# Áreas de conservación
-areas_conservacion <- st_read(
+# Áreas de conservación (AC)
+ac <- st_read(
   "datos/areas-conservacion.gpkg", 
   quiet = TRUE
-)
+) |>
+  st_make_valid()
+
+# Áreas silvestres protegidas (ASP)
+asp <- st_read(
+  "datos/asp.gpkg", 
+  quiet = TRUE
+) |>
+  st_make_valid() |>
+  group_by(siglas_cat, nombre_asp) |>
+  summarize(
+    do_union = TRUE,
+    .groups = "drop"
+  ) |>
+  mutate(nombre_asp = paste(siglas_cat, nombre_asp)) |>
+  select(nombre_asp) |>
+  st_cast("MULTIPOLYGON")
 
 # Incendios
 incendios <- st_read(
@@ -211,18 +307,38 @@ incendios <- st_read(
   mutate(
     acq_date = as.Date(acq_date)
   ) |>
+  filter(
+    confidence >= CONFIANZA_MINIMA_ABSOLUTA
+  ) |>
+  filter(
+    acq_date >= "2001-01-01" & acq_date <= "2024-12-31"
+  ) |>
   st_join(
-    select(areas_conservacion, nombre_ac),
+    select(ac, nombre_ac),
+    join = st_intersects
+  ) |>
+  st_join(
+    select(asp, nombre_asp),
     join = st_intersects
   )
 
-# Áreas de conservación con estadísticas de incendios
-areas_conservacion_incendios <- 
-  areas_conservacion |>
+# AC con estadísticas de incendios
+ac_incendios <- 
+  ac |>
   left_join(
     st_drop_geometry(incendios) |>
       count(nombre_ac, name = "incendios_n"),
     by = "nombre_ac"
+  ) |>
+  mutate(incendios_n = coalesce(incendios_n, 0L))
+
+# ASP con estadísticas de incendios
+asp_incendios <- 
+  asp |>
+  left_join(
+    st_drop_geometry(incendios) |>
+      count(nombre_asp, name = "incendios_n"),
+    by = "nombre_asp"
   ) |>
   mutate(incendios_n = coalesce(incendios_n, 0L))
 </script>
@@ -252,18 +368,18 @@ filtrar_incendios <- reactive({
     incendios_filtrados |>
     filter(frp >= input$frp[1] & frp <= input$frp[2])
 
-  # Filtrar por satélite
-  if (input$satelite != "Todos") {
+  # Filtrar por AC
+  if (input$ac != "Todas") {
     incendios_filtrados <-
       incendios_filtrados |>
-      filter(satellite == input$satelite)
+      filter(nombre_ac == input$ac)
   }
   
-  # Filtrar por área de conservación
-  if (input$area_conservacion != "Todas") {
+  # Filtrar por ASP
+  if (input$asp != "Todas") {
     incendios_filtrados <-
       incendios_filtrados |>
-      filter(nombre_ac == input$area_conservacion)
+      filter(nombre_asp == input$asp)
   }
   
   return(incendios_filtrados)
@@ -271,25 +387,67 @@ filtrar_incendios <- reactive({
 
 # Función reactiva para filtrar los datos de áreas de conservación
 # con estadísticas de incendios de acuerdo con los filtros especificados por el usuario
-filtrar_areas_conservacion_incendios <- reactive({
-  # Se inicia con los datos de incendios sin filtrar
+filtrar_ac_incendios <- reactive({
   incendios_filtrados <- filtrar_incendios()
   
-  # Áreas de conservación con estadísticas de incendios
-  areas_conservacion_incendios_filtradas <- 
-    areas_conservacion |>
-  left_join(
-    st_drop_geometry(incendios_filtrados) |>
-      count(nombre_ac, name = "incendios_n"),
-    by = "nombre_ac"
-  ) |>
-  mutate(incendios_n = coalesce(incendios_n, 0L))
+  # Verificar si hay incendios en AC
+  incendios_en_ac <- incendios_filtrados |>
+    filter(!is.na(nombre_ac))
   
-  return(areas_conservacion_incendios_filtradas)
+  if (nrow(incendios_en_ac) > 0) {
+    # Si hay incendios en AC, proceder normalmente
+    ac_incendios_filtradas <- 
+      ac |>
+      left_join(
+        st_drop_geometry(incendios_filtrados) |>
+          count(nombre_ac, name = "incendios_n"),
+        by = "nombre_ac"
+      ) |>
+      mutate(incendios_n = coalesce(incendios_n, 0L)) |>
+      arrange(incendios_n)
+  } else {
+    # Si no hay incendios, devolver data frame vacío con estructura correcta
+    ac_incendios_filtradas <-
+      ac |>
+      slice(0) |>
+      mutate(incendios_n = integer())
+  }
+  
+  return(ac_incendios_filtradas)
 })
 
-# Tabla interactiva
-output$tabla <- renderDataTable({
+# Función reactiva para filtrar los datos de ASP
+# con estadísticas de incendios de acuerdo con los filtros especificados por el usuario
+filtrar_asp_incendios <- reactive({
+  incendios_filtrados <- filtrar_incendios()
+  
+  # Verificar si hay incendios en ASP
+  incendios_en_asp <- incendios_filtrados |>
+    filter(!is.na(nombre_asp))
+  
+  if (nrow(incendios_en_asp) > 0) {
+    # Si hay incendios en ASP, proceder normalmente
+    asp_incendios_filtradas <- 
+      asp |>
+      inner_join(
+        st_drop_geometry(incendios_filtrados) |>
+          count(nombre_asp, name = "incendios_n"),
+        by = "nombre_asp"
+      ) |>
+      mutate(incendios_n = coalesce(incendios_n, 0L)) |>
+      arrange(incendios_n)
+  } else {
+    # Si no hay incendios, devolver data frame vacío con estructura correcta
+    asp_incendios_filtradas <- asp |>
+      slice(0) |>
+      mutate(incendios_n = integer())
+  }
+  
+  return(asp_incendios_filtradas)
+})
+
+# Tabla interactiva de registros de incendios
+output$tabla_registros_incendios <- renderDataTable({
   # Filtrado del conjunto de datos
   incendios_filtrados <- filtrar_incendios()
   
@@ -297,11 +455,18 @@ output$tabla <- renderDataTable({
   tabla <- 
     incendios_filtrados |>
       st_drop_geometry() |>
-      dplyr::select(nombre_ac, acq_date, acq_time, daynight, satellite, frp, brightness, bright_t31, confidence) |>
+      dplyr::select(
+        nombre_ac, nombre_asp, acq_date, acq_time, 
+        daynight, satellite, frp, 
+        brightness, bright_t31, confidence
+      ) |>
       arrange(desc(acq_date)) |>                 
       datatable(
         rownames = FALSE,
-        colnames = c("AC", "Fecha", "Hora", "Día/Noche", "Satélite", "FRP (MW)", "Brillantez", "Brillo T31", "Confianza"),
+        colnames = c(
+          "AC", "ASP", "Fecha", "Hora", 
+          "Día/Noche", "Satélite", "FRP (MW)", 
+          "Brillantez", "Brillo T31", "Confianza"),
         options = list(                 
           pageLength = 10,
           language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
@@ -312,77 +477,276 @@ output$tabla <- renderDataTable({
   tabla
 })
 
-# Gráfico interactivo
-output$grafico <- renderPlotly({
+# Gráfico interactivo de cantidad de incendios en AC
+output$grafico_cantidad_incendios_ac <- renderPlotly({
   # Filtrar el conjunto de datos
-  areas_conservacion_incendios_filtradas <- 
-    filtrar_areas_conservacion_incendios()
+  ac_incendios_filtradas <- filtrar_ac_incendios()
   
   # Definir el gráfico ggplot2
-  g <- areas_conservacion_incendios_filtradas |>
-    ggplot(
-      aes(x = reorder(nombre_ac, incendios_n), y = incendios_n)
-    ) +
-    geom_col(
-      aes(
-        text = paste0("Cantidad de incendios: ", incendios_n)
-      ),
-      fill = "red"
-    ) +
-    xlab("Área de conservación") +
+  g <- ac_incendios_filtradas |>
+    ggplot(aes(x = reorder(nombre_ac, incendios_n), y = incendios_n)) +
+    geom_col(fill = "darkred") +
+    xlab("AC") +
     ylab("Cantidad de incendios") +
     coord_flip() +
     theme_minimal()
   
- # Mostrar el gráfico plotly
- ggplotly(g, tooltip = "text") |> 
-   config(locale = 'es')
+  # Convertir a plotly y agregar tooltip personalizado
+  ggplotly(g, tooltip = c("x", "y")) |> 
+    style(
+      hovertemplate = paste(
+        '%{y}<br>',
+        'Incendios: %{x}<br>',
+        '<extra><\u002fextra>'
+      )
+    ) |>
+    config(locale = 'es')
+})
+
+# Gráfico interactivo de cantidad de incendios en ASP
+output$grafico_cantidad_incendios_asp <- renderPlotly({
+  # Filtrar el conjunto de datos
+  asp_incendios_filtradas <- filtrar_asp_incendios()
+  
+  # Definir el gráfico ggplot2
+  g <- asp_incendios_filtradas |>
+    ggplot(aes(x = reorder(nombre_asp, incendios_n), y = incendios_n)) +
+    geom_col(fill = "darkgreen") +
+    xlab("ASP") +
+    ylab("Cantidad de incendios") +
+    coord_flip() +
+    theme_minimal()
+  
+  # Convertir a plotly con tooltip personalizado
+  ggplotly(g, tooltip = c("x", "y")) |> 
+    style(
+      hovertemplate = paste(
+        '%{y}<br>',
+        'Incendios: %{x}<br>',
+        '<extra><\u002fextra>'
+      )
+    ) |>
+    config(locale = 'es')
+})
+
+# Gráfico interactivo de cantidad de incendios por año
+output$grafico_cantidad_incendios_anio <- renderPlotly({
+  # Filtrar el conjunto de datos
+  incendios_filtrados <- filtrar_incendios()
+  
+  # Incendios agrupados por año
+  incendios_por_anio <-
+    incendios_filtrados |>
+    st_drop_geometry() |>
+    mutate(
+      anio = year(acq_date)
+    ) |>
+    group_by(anio) |>
+    summarise(
+      n       = n(),
+      .groups = "drop"
+    )
+  
+  cortes_anios <- c(2001, 2005, 2010, 2015, 2020, 2024)
+  lim_x <- range(cortes_anios)
+  
+  # Serie base con tooltips
+  serie_na <-
+    incendios_por_anio |>
+    dplyr::arrange(anio) |>
+    dplyr::mutate(
+      tt_n = paste0(
+        "Año: ", anio,
+        "<br>Cantidad de incendios: ", scales::comma(n)
+      )
+    )
+  
+  # Datos para líneas de tendencia (ignorar NA)
+  df_n <- tidyr::drop_na(serie_na, n)
+  
+  pred_n <- tibble::tibble(
+    anio = df_n$anio,
+    yhat = predict(stats::lm(n ~ anio, data = df_n), newdata = df_n)
+  )
+  
+  # Plotly con doble eje (izq: área; der: cantidad)
+  fig <- plotly::plot_ly() |>
+    plotly::add_lines(
+    data = serie_na,
+    x = ~anio, y = ~n,
+    name = "Cantidad de incendios",
+    line = list(color = "red", width = 2)
+  ) |>
+  plotly::add_lines(
+    data = pred_n, x = ~anio, y = ~yhat,
+    showlegend = FALSE,
+    line = list(color ="red", dash = "dash", width = 1)
+  ) |>
+  plotly::layout(
+    xaxis = list(
+      title = "Año",
+      tickvals = cortes_anios,
+      range = c(min(lim_x), max(lim_x))
+    ),
+    yaxis2 = list(
+      title = list(text = "Cantidad de incendios", standoff = 16),
+      overlaying = "y",
+      side = "right",
+      tickformat = ",.0f",
+      automargin = TRUE
+    ),
+    legend = list(orientation = "h", x = 0, y = 1.15),
+    margin = list(t = 90, r = 80, b = 60, l = 60)
+  ) |>
+  plotly::config(locale = "es", displayModeBar = TRUE)
+
+  fig
 })
 
 # Mapa interactivo
 output$mapa <- renderTmap({
   # Filtrar conjuntos de datos
-  incendios_filtrados <- 
-    filtrar_incendios()
-  areas_conservacion_incendios_filtradas <- 
-    filtrar_areas_conservacion_incendios()
+  incendios_filtrados     <- filtrar_incendios()
+  ac_incendios_filtradas  <- filtrar_ac_incendios()
+  asp_incendios_filtradas <- filtrar_asp_incendios()
   
-  # Definir el mapa
-  tm_basemap("OpenStreetMap") +
-  tm_shape(areas_conservacion_incendios_filtradas, name = "Áreas de conservación") +
-    tm_polygons(
-      fill = "incendios_n",
-      fill.scale  = tm_scale_intervals(style = "quantile", values = "Reds"),
-      fill.legend = tm_legend(title = "Cantidad de incendios"),
-      fill_alpha = 0.3,
-      id = "nombre_ac",
-      popup.vars = c("AC" = "nombre_ac", "Incendios" = "incendios_n")
-    ) +
-    tm_borders(col = "darkgreen", lwd = 1.5) +
-  tm_shape(incendios_filtrados, name = "Incendios") +
-    tm_dots(
-      fill = "frp",
-      fill.scale = tm_scale_intervals(
-        style  = "quantile",
-        values = "inferno"
-      ),
-      fill.legend = tm_legend(title = "FRP (MW)"),
-      size = 0.5,
-      id = "frp",
-      popup.vars = c(
-        "Fecha"="acq_date", 
-        "Hora"="acq_time",
-        "Satélite"="satellite", 
-        "FRP (MW)"="frp",
-        "Confianza"="confidence", 
-        "Día/Noche"="daynight",
-        "AC" = "nombre_ac"
-      )
-    ) +
+  # Mapa base
+  mapa <- tm_basemap(c(
+    "CartoDB.Positron", 
+    "OpenStreetMap", 
+    "Esri.WorldImagery"
+  ))
+    
+  # Agregar capa de AC solo si hay datos
+  if (nrow(ac_incendios_filtradas) > 0) {
+    # Verificar variabilidad en los datos
+    valores_unicos_ac <- length(unique(ac_incendios_filtradas$incendios_n))
+    max_valor_ac <- max(ac_incendios_filtradas$incendios_n, na.rm = TRUE)
+    
+    if (valores_unicos_ac > 1 && max_valor_ac > 0) {
+      # Si hay variación y no todos son 0, usar escala de intervalos
+      mapa <- mapa +
+        tm_shape(ac_incendios_filtradas, name = "AC") +
+          tm_polygons(
+            fill = "incendios_n",
+            fill.scale = tm_scale_intervals(
+              style = "quantile", 
+              values = "brewer.reds",
+              n = min(5, valores_unicos_ac)
+            ),
+            fill.legend = tm_legend(title = "Incendios en AC"),
+            fill_alpha = 0.3,
+            id = "nombre_ac",
+            popup.vars = c("AC" = "nombre_ac", "Incendios" = "incendios_n")
+          ) +
+          tm_borders(col = "black", lwd = 1.5)
+    } else {
+      # Si todos los valores son iguales o todos son 0, usar color fijo
+      mapa <- mapa +
+        tm_shape(ac_incendios_filtradas, name = "AC") +
+          tm_polygons(
+            fill = "#fee5d9", # color fijo (rojo muy claro)
+            fill_alpha = 0.3,
+            id = "nombre_ac",
+            popup.vars = c("AC" = "nombre_ac", "Incendios" = "incendios_n")
+          ) +
+          tm_borders(col = "black", lwd = 1.5)
+    }
+  }
+  
+  # Agregar capa de ASP solo si hay datos
+  if (nrow(asp_incendios_filtradas) > 0) {
+    # Verificar variabilidad en los datos
+    valores_unicos_asp <- length(unique(asp_incendios_filtradas$incendios_n))
+    max_valor_asp <- max(asp_incendios_filtradas$incendios_n, na.rm = TRUE)
+    
+    if (valores_unicos_asp > 1 && max_valor_asp > 0) {
+      # Si hay variación y no todos son 0, usar escala de intervalos
+      mapa <- mapa +
+        tm_shape(asp_incendios_filtradas, name = "ASP") +
+          tm_polygons(
+            fill = "incendios_n",
+            fill.scale = tm_scale_intervals(
+              style = "quantile", 
+              values = "brewer.greens",
+              n = min(5, valores_unicos_asp)
+            ),
+            fill.legend = tm_legend(title = "Incendios en ASP"),
+            fill_alpha = 0.4,
+            id = "nombre_asp",
+            popup.vars = c("ASP" = "nombre_asp", "Incendios" = "incendios_n")
+          ) +
+          tm_borders(col = "darkblue", lwd = 1.2)
+    } else {
+      # Si todos los valores son iguales o todos son 0, usar color fijo
+      mapa <- mapa +
+        tm_shape(asp_incendios_filtradas, name = "ASP") +
+          tm_polygons(
+            fill = "#e5f5e0", # color fijo (verde muy claro)
+            fill_alpha = 0.4,
+            id = "nombre_asp",
+            popup.vars = c("ASP" = "nombre_asp", "Incendios" = "incendios_n")
+          ) +
+          tm_borders(col = "darkblue", lwd = 1.2)
+    }
+  }
+
+  # Agregar capa de incendios solo si hay datos
+  if (nrow(incendios_filtrados) > 0) {
+    # Verificar variabilidad en FRP
+    valores_unicos_frp <- length(unique(incendios_filtrados$frp))
+    
+    if (valores_unicos_frp > 1) {
+      # Si hay variación en FRP, usar escala de intervalos
+      mapa <- mapa +
+        tm_shape(incendios_filtrados, name = "Incendios") +
+        tm_dots(
+          fill = "frp",
+          fill.scale = tm_scale_intervals(
+            style = "quantile",
+            values = "inferno",
+            n = min(5, valores_unicos_frp)
+          ),
+          fill.legend = tm_legend(title = "FRP (MW)"),
+          size = 0.5,
+          id = "frp",
+          popup.vars = c(
+            "Fecha" = "acq_date", 
+            "Hora" = "acq_time",
+            "Satélite" = "satellite", 
+            "FRP (MW)" = "frp",
+            "Confianza" = "confidence", 
+            "Día/Noche" = "daynight",
+            "AC" = "nombre_ac",
+            "ASP" = "nombre_asp"
+          )
+        )
+    } else {
+      # Si todos los valores de FRP son iguales, usar color fijo
+      mapa <- mapa +
+        tm_shape(incendios_filtrados, name = "Incendios") +
+          tm_dots(
+            fill = "red",  
+            size = 0.5,
+            popup.vars = c(
+              "Fecha" = "acq_date", 
+              "Hora" = "acq_time",
+              "Satélite" = "satellite", 
+              "FRP (MW)" = "frp",
+              "Confianza" = "confidence", 
+              "Día/Noche" = "daynight",
+              "AC" = "nombre_ac",
+              "ASP" = "nombre_asp"
+            )
+          )
+    }
+  }
+  
+  # Agregar elementos de control del mapa
+  mapa +
     tm_scalebar(position = c("left", "bottom")) +
-    tm_compass(position = c("right","top")) +
-    tm_view(bbox = st_bbox(incendios_filtrados))
-  })
+    tm_compass(position = c("right", "top"))
+})
 </script>
  
 <script type="application/shiny-prerendered" data-context="server-extras">
@@ -414,7 +778,7 @@ ojs_define <- function(..., .session = shiny::getDefaultReactiveDomain()) {
 </p>
 <!--html_preserve-->
 <script type="application/shiny-prerendered" data-context="dependencies">
-{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ionrangeslider-javascript"]},{"type":"character","attributes":{},"value":["2.3.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/ionrangeslider"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/ion.rangeSlider.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["strftime"]},{"type":"character","attributes":{},"value":["0.9.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/strftime"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["strftime-min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ionrangeslider-css"]},{"type":"character","attributes":{},"value":["2.3.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/ionrangeslider"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/ion.rangeSlider.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ionrangeslider-javascript"]},{"type":"character","attributes":{},"value":["2.3.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/ionrangeslider"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/ion.rangeSlider.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["strftime"]},{"type":"character","attributes":{},"value":["0.9.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/strftime"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["strftime-min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ionrangeslider-css"]},{"type":"character","attributes":{},"value":["2.3.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/ionrangeslider"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/ion.rangeSlider.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["selectize"]},{"type":"character","attributes":{},"value":["0.15.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/selectize"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/selectize.min.js","accessibility/js/selectize-plugin-a11y.min.js"]},{"type":"character","attributes":{},"value":["css/selectize.bootstrap3.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap-datepicker-js"]},{"type":"character","attributes":{},"value":["1.9.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/datepicker"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/bootstrap-datepicker.min.js"]},{"type":"NULL"},{"type":"character","attributes":{},"value":["<script>(function() {\n        var datepicker = $.fn.datepicker.noConflict();\n        $.fn.bsDatepicker = datepicker;\n      })();\n     <\/script>"]},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap-datepicker-css"]},{"type":"character","attributes":{},"value":["1.9.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/datepicker"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/bootstrap-datepicker3.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["selectize"]},{"type":"character","attributes":{},"value":["0.15.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/selectize"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/selectize.min.js","accessibility/js/selectize-plugin-a11y.min.js"]},{"type":"character","attributes":{},"value":["css/selectize.bootstrap3.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmltools-fill"]},{"type":"character","attributes":{},"value":["0.5.8.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["fill"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["fill.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmltools"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.5.8.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["1.6.4"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.6.4"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["3.6.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/3.6.0"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery-3.6.0.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquerylib"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.1.4"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["leaflet"]},{"type":"character","attributes":{},"value":["1.3.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/leaflet"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet.js"]},{"type":"character","attributes":{},"value":["leaflet.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["leafletfix"]},{"type":"character","attributes":{},"value":["1.0.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/leafletfix"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leafletfix.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["proj4"]},{"type":"character","attributes":{},"value":["2.6.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/plugins/Proj4Leaflet"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["proj4.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["2.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["Proj4Leaflet"]},{"type":"character","attributes":{},"value":["1.0.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/plugins/Proj4Leaflet"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["proj4leaflet.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["2.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["rstudio_leaflet"]},{"type":"character","attributes":{},"value":["1.3.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/rstudio_leaflet"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rstudio_leaflet.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["leaflet-binding"]},{"type":"character","attributes":{},"value":["2.2.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/assets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["2.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmltools-fill"]},{"type":"character","attributes":{},"value":["0.5.8.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["fill"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["fill.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmltools"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.5.8.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["1.6.4"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.6.4"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["datatables-css"]},{"type":"character","attributes":{},"value":["0.0.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/css"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["datatables-crosstalk.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["DT"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.33"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["datatables-binding"]},{"type":"character","attributes":{},"value":["0.33"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["datatables.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["DT"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["0.33"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["3.5.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["crosstalk"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["crosstalk"]},{"type":"character","attributes":{},"value":["1.2.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/crosstalk.min.js"]},{"type":"character","attributes":{},"value":["css/crosstalk.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["crosstalk"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.2.2"]}]}]}
+{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ionrangeslider-javascript"]},{"type":"character","attributes":{},"value":["2.3.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/ionrangeslider"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/ion.rangeSlider.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["strftime"]},{"type":"character","attributes":{},"value":["0.9.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/strftime"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["strftime-min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ionrangeslider-css"]},{"type":"character","attributes":{},"value":["2.3.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/ionrangeslider"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/ion.rangeSlider.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ionrangeslider-javascript"]},{"type":"character","attributes":{},"value":["2.3.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/ionrangeslider"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/ion.rangeSlider.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["strftime"]},{"type":"character","attributes":{},"value":["0.9.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/strftime"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["strftime-min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["ionrangeslider-css"]},{"type":"character","attributes":{},"value":["2.3.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/ionrangeslider"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/ion.rangeSlider.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap-datepicker-js"]},{"type":"character","attributes":{},"value":["1.9.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/datepicker"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/bootstrap-datepicker.min.js"]},{"type":"NULL"},{"type":"character","attributes":{},"value":["<script>(function() {\n        var datepicker = $.fn.datepicker.noConflict();\n        $.fn.bsDatepicker = datepicker;\n      })();\n     <\/script>"]},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap-datepicker-css"]},{"type":"character","attributes":{},"value":["1.9.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/datepicker"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/bootstrap-datepicker3.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["selectize"]},{"type":"character","attributes":{},"value":["0.15.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/selectize"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/selectize.min.js","accessibility/js/selectize-plugin-a11y.min.js"]},{"type":"character","attributes":{},"value":["css/selectize.bootstrap3.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["selectize"]},{"type":"character","attributes":{},"value":["0.15.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/shared/selectize"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/selectize.min.js","accessibility/js/selectize-plugin-a11y.min.js"]},{"type":"character","attributes":{},"value":["css/selectize.bootstrap3.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["shiny"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.10.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmltools-fill"]},{"type":"character","attributes":{},"value":["0.5.8.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["fill"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["fill.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmltools"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.5.8.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["1.6.4"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.6.4"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["3.6.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/3.6.0"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery-3.6.0.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquerylib"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.1.4"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["leaflet"]},{"type":"character","attributes":{},"value":["1.3.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/leaflet"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet.js"]},{"type":"character","attributes":{},"value":["leaflet.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["leafletfix"]},{"type":"character","attributes":{},"value":["1.0.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/leafletfix"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leafletfix.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["proj4"]},{"type":"character","attributes":{},"value":["2.6.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/plugins/Proj4Leaflet"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["proj4.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["2.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["Proj4Leaflet"]},{"type":"character","attributes":{},"value":["1.0.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/plugins/Proj4Leaflet"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["proj4leaflet.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["2.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["rstudio_leaflet"]},{"type":"character","attributes":{},"value":["1.3.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/rstudio_leaflet"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rstudio_leaflet.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["leaflet-binding"]},{"type":"character","attributes":{},"value":["2.2.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/assets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["leaflet"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["2.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmltools-fill"]},{"type":"character","attributes":{},"value":["0.5.8.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["fill"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["fill.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmltools"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.5.8.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["1.6.4"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.6.4"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["plotly-binding"]},{"type":"character","attributes":{},"value":["4.11.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["plotly.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["plotly"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["4.11.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmltools-fill"]},{"type":"character","attributes":{},"value":["0.5.8.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["fill"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["fill.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmltools"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.5.8.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["1.6.4"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.6.4"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["plotly-binding"]},{"type":"character","attributes":{},"value":["4.11.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["plotly.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["plotly"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["4.11.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmltools-fill"]},{"type":"character","attributes":{},"value":["0.5.8.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["fill"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["fill.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmltools"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.5.8.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["1.6.4"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.6.4"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["plotly-binding"]},{"type":"character","attributes":{},"value":["4.11.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["plotly.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["plotly"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["4.11.0"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmltools-fill"]},{"type":"character","attributes":{},"value":["0.5.8.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["fill"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["fill.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmltools"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.5.8.1"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["1.6.4"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.6.4"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["datatables-css"]},{"type":"character","attributes":{},"value":["0.0.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/css"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["datatables-crosstalk.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["DT"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.33"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["datatables-binding"]},{"type":"character","attributes":{},"value":["0.33"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["datatables.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["DT"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["0.33"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["3.5.1"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["lib/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["crosstalk"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.2.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["crosstalk"]},{"type":"character","attributes":{},"value":["1.2.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["js/crosstalk.min.js"]},{"type":"character","attributes":{},"value":["css/crosstalk.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["crosstalk"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.2.2"]}]}]}
 </script>
 <!--/html_preserve-->
 <!--html_preserve-->

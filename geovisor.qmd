@@ -25,7 +25,10 @@ library(scales)
 tmap_mode("view")
 
 # Parámetros generales
-CONFIANZA_MINIMA <- 100
+CONFIANZA_MINIMA          <- 100
+CONFIANZA_MINIMA_ABSOLUTA <- 90
+FECHA_MINIMA <- "2001-01-01"
+FECHA_MAXIMA <- "2024-12-31"
 ```
 
 ```{r}
@@ -34,11 +37,27 @@ CONFIANZA_MINIMA <- 100
 #| warning: false
 #| message: false
 
-# Áreas de conservación
-areas_conservacion <- st_read(
+# Áreas de conservación (AC)
+ac <- st_read(
   "datos/areas-conservacion.gpkg", 
   quiet = TRUE
-)
+) |>
+  st_make_valid()
+
+# Áreas silvestres protegidas (ASP)
+asp <- st_read(
+  "datos/asp.gpkg", 
+  quiet = TRUE
+) |>
+  st_make_valid() |>
+  group_by(siglas_cat, nombre_asp) |>
+  summarize(
+    do_union = TRUE,
+    .groups = "drop"
+  ) |>
+  mutate(nombre_asp = paste(siglas_cat, nombre_asp)) |>
+  select(nombre_asp) |>
+  st_cast("MULTIPOLYGON")
 
 # Incendios
 incendios <- st_read(
@@ -48,33 +67,57 @@ incendios <- st_read(
   mutate(
     acq_date = as.Date(acq_date)
   ) |>
+  filter(
+    confidence >= CONFIANZA_MINIMA_ABSOLUTA
+  ) |>
+  filter(
+    acq_date >= "2001-01-01" & acq_date <= "2024-12-31"
+  ) |>
   st_join(
-    select(areas_conservacion, nombre_ac),
+    select(ac, nombre_ac),
+    join = st_intersects
+  ) |>
+  st_join(
+    select(asp, nombre_asp),
     join = st_intersects
   )
 
-# Áreas de conservación con estadísticas de incendios
-areas_conservacion_incendios <- 
-  areas_conservacion |>
+# AC con estadísticas de incendios
+ac_incendios <- 
+  ac |>
   left_join(
     st_drop_geometry(incendios) |>
       count(nombre_ac, name = "incendios_n"),
     by = "nombre_ac"
   ) |>
   mutate(incendios_n = coalesce(incendios_n, 0L))
+
+# ASP con estadísticas de incendios
+asp_incendios <- 
+  asp |>
+  left_join(
+    st_drop_geometry(incendios) |>
+      count(nombre_asp, name = "incendios_n"),
+    by = "nombre_asp"
+  ) |>
+  mutate(incendios_n = coalesce(incendios_n, 0L))
 ```
 
-# {.sidebar}
+# {.sidebar width="15%"}
 
 ```{r}
-#| label: slider-confianza
+#| label: slider-confianza-minima
 
-# Confianza mínima
+# Confianza mínima y máxima
+confianza_minima <- min(incendios$confidence, na.rm = TRUE)
+confianza_maxima <- max(incendios$confidence, na.rm = TRUE)
+
+# Control de entrada de confianza mínima
 sliderInput(
   inputId = "confianza_minima", 
   label = "Confianza mínima",
-  min = 0, 
-  max = 100, 
+  min = confianza_minima, 
+  max = confianza_maxima, 
   value = CONFIANZA_MINIMA, 
   step = 1
 )
@@ -87,7 +130,7 @@ sliderInput(
 frp_minimo <- min(incendios$frp, na.rm = TRUE)
 frp_maximo <- max(incendios$frp, na.rm = TRUE)
 
-# Widget deslizador de selección ("sliderInput") de FRP
+# Control de entrada de FRP
 sliderInput(
   inputId = "frp",
   label   = "Potencia radiativa del fuego - FRP (MW)",
@@ -101,30 +144,13 @@ sliderInput(
 ```
 
 ```{r}
-#| label: select-satelite
-
-# Lista ordenada de satélites
-lista_satelites <- unique(incendios$satellite)
-lista_satelites <- sort(lista_satelites)
-lista_satelites <- c("Todos", lista_satelites)
-
-selectInput(
-  inputId  = "satelite",
-  label    = "Satélite",
-  choices  = lista_satelites,
-  selected = "Todos"
-)
-```
-
-```{r}
 #| label: slider-fecha
 
 # Fechas mínima y máxima
-# fecha_minima <- min(incendios$acq_date, na.rm = TRUE)
-# fecha_maxima <- max(incendios$acq_date, na.rm = TRUE)
-fecha_minima <- "2024-01-01"
-fecha_maxima <- "2024-12-31"
+fecha_minima <- min(incendios$acq_date, na.rm = TRUE)
+fecha_maxima <- max(incendios$acq_date, na.rm = TRUE)
 
+# Control de entrada de fecha
 dateRangeInput(
   inputId = "fecha",
   label   = "Fecha",
@@ -139,26 +165,46 @@ dateRangeInput(
 ```
 
 ```{r}
-#| label: select-area-conservacion
+#| label: select-ac
 
-# Lista ordenada de áreas de conservación
-lista_areas_conservacion <- unique(incendios$nombre_ac)
-lista_areas_conservacion <- sort(lista_areas_conservacion)
-lista_areas_conservacion <- c("Todas", lista_areas_conservacion)
+# Lista ordenada de AC
+lista_ac <- unique(incendios$nombre_ac)
+lista_ac <- sort(lista_ac)
+lista_ac <- c("Todas", lista_ac)
 
+# Control de entrada de AC
 selectInput(
-  inputId  = "area_conservacion",
-  label    = "Área de conservación",
-  choices  = lista_areas_conservacion,
+  inputId  = "ac",
+  label    = "Área de Conservación (AC)",
+  choices  = lista_ac,
   selected = "Todas"
 )
 ```
 
-# Mapa 
+```{r}
+#| label: select-asp
+
+# Lista ordenada de ASP
+lista_asp <- unique(incendios$nombre_asp)
+lista_asp <- sort(lista_asp)
+lista_asp <- c("Todas", lista_asp)
+
+# Control de entrada de ASP
+selectInput(
+  inputId  = "asp",
+  label    = "Área Silvestre Protegida (ASP)",
+  choices  = lista_asp,
+  selected = "Todas"
+)
+```
+
+# Análisis espacial
+
+## Mapa {width="75%"}
 
 ```{r}
 #| label: salida-mapa
-#| title: "Mapa"
+#| title: "Distribución de incendios en Áreas de Conservación (AC) y Áreas Silvestres Protegidas (ASP)"
 
 # Mapa
 tmapOutput(
@@ -166,28 +212,52 @@ tmapOutput(
 )
 ```
 
-## Gráficos estadísticos
+## Gráficos {width="25%"}
 
 ```{r}
-#| label: salida-grafico
-#| title: "Cantidad de incendios en áreas de conservación"
-#| eval: false
+#| label: salida-grafico-cantidad-incendios-ac
+#| title: "Cantidad de incendios en AC"
+#| eval: true
 
-# Gráfico 1
+# Gráfico
 plotlyOutput(
-    outputId =  "grafico"
+    outputId =  "grafico_cantidad_incendios_ac"
 )
 ```
 
-# Tabla
+```{r}
+#| label: salida-grafico-cantidad-incendios-asp
+#| title: "Cantidad de incendios en ASP"
+#| eval: true
+
+# Gráfico
+plotlyOutput(
+    outputId =  "grafico_cantidad_incendios_asp"
+)
+```
+
+# Análisis temporal
+
+```{r}
+#| label: salida-grafico-cantidad-incendios-anio
+#| title: "Cantidad de incendios por año"
+#| eval: true
+
+# Gráfico
+plotlyOutput(
+    outputId =  "grafico_cantidad_incendios_anio"
+)
+```
+
+# Registros de incendios
 
 ```{r}
 #| label: salida-tabla
-#| title: "Tabla"
+#| title: "Registros de incendios"
 
 # Tabla
 dataTableOutput(
-    outputId =  "tabla"
+    outputId =  "tabla_registros_incendios"
 )
 ```
 
@@ -219,18 +289,18 @@ filtrar_incendios <- reactive({
     incendios_filtrados |>
     filter(frp >= input$frp[1] & frp <= input$frp[2])
 
-  # Filtrar por satélite
-  if (input$satelite != "Todos") {
+  # Filtrar por AC
+  if (input$ac != "Todas") {
     incendios_filtrados <-
       incendios_filtrados |>
-      filter(satellite == input$satelite)
+      filter(nombre_ac == input$ac)
   }
   
-  # Filtrar por área de conservación
-  if (input$area_conservacion != "Todas") {
+  # Filtrar por ASP
+  if (input$asp != "Todas") {
     incendios_filtrados <-
       incendios_filtrados |>
-      filter(nombre_ac == input$area_conservacion)
+      filter(nombre_asp == input$asp)
   }
   
   return(incendios_filtrados)
@@ -238,25 +308,67 @@ filtrar_incendios <- reactive({
 
 # Función reactiva para filtrar los datos de áreas de conservación
 # con estadísticas de incendios de acuerdo con los filtros especificados por el usuario
-filtrar_areas_conservacion_incendios <- reactive({
-  # Se inicia con los datos de incendios sin filtrar
+filtrar_ac_incendios <- reactive({
   incendios_filtrados <- filtrar_incendios()
   
-  # Áreas de conservación con estadísticas de incendios
-  areas_conservacion_incendios_filtradas <- 
-    areas_conservacion |>
-  left_join(
-    st_drop_geometry(incendios_filtrados) |>
-      count(nombre_ac, name = "incendios_n"),
-    by = "nombre_ac"
-  ) |>
-  mutate(incendios_n = coalesce(incendios_n, 0L))
+  # Verificar si hay incendios en AC
+  incendios_en_ac <- incendios_filtrados |>
+    filter(!is.na(nombre_ac))
   
-  return(areas_conservacion_incendios_filtradas)
+  if (nrow(incendios_en_ac) > 0) {
+    # Si hay incendios en AC, proceder normalmente
+    ac_incendios_filtradas <- 
+      ac |>
+      left_join(
+        st_drop_geometry(incendios_filtrados) |>
+          count(nombre_ac, name = "incendios_n"),
+        by = "nombre_ac"
+      ) |>
+      mutate(incendios_n = coalesce(incendios_n, 0L)) |>
+      arrange(incendios_n)
+  } else {
+    # Si no hay incendios, devolver data frame vacío con estructura correcta
+    ac_incendios_filtradas <-
+      ac |>
+      slice(0) |>
+      mutate(incendios_n = integer())
+  }
+  
+  return(ac_incendios_filtradas)
 })
 
-# Tabla interactiva
-output$tabla <- renderDataTable({
+# Función reactiva para filtrar los datos de ASP
+# con estadísticas de incendios de acuerdo con los filtros especificados por el usuario
+filtrar_asp_incendios <- reactive({
+  incendios_filtrados <- filtrar_incendios()
+  
+  # Verificar si hay incendios en ASP
+  incendios_en_asp <- incendios_filtrados |>
+    filter(!is.na(nombre_asp))
+  
+  if (nrow(incendios_en_asp) > 0) {
+    # Si hay incendios en ASP, proceder normalmente
+    asp_incendios_filtradas <- 
+      asp |>
+      inner_join(
+        st_drop_geometry(incendios_filtrados) |>
+          count(nombre_asp, name = "incendios_n"),
+        by = "nombre_asp"
+      ) |>
+      mutate(incendios_n = coalesce(incendios_n, 0L)) |>
+      arrange(incendios_n)
+  } else {
+    # Si no hay incendios, devolver data frame vacío con estructura correcta
+    asp_incendios_filtradas <- asp |>
+      slice(0) |>
+      mutate(incendios_n = integer())
+  }
+  
+  return(asp_incendios_filtradas)
+})
+
+# Tabla interactiva de registros de incendios
+output$tabla_registros_incendios <- renderDataTable({
   # Filtrado del conjunto de datos
   incendios_filtrados <- filtrar_incendios()
   
@@ -264,11 +376,18 @@ output$tabla <- renderDataTable({
   tabla <- 
     incendios_filtrados |>
       st_drop_geometry() |>
-      dplyr::select(nombre_ac, acq_date, acq_time, daynight, satellite, frp, brightness, bright_t31, confidence) |>
+      dplyr::select(
+        nombre_ac, nombre_asp, acq_date, acq_time, 
+        daynight, satellite, frp, 
+        brightness, bright_t31, confidence
+      ) |>
       arrange(desc(acq_date)) |>                 
       datatable(
         rownames = FALSE,
-        colnames = c("AC", "Fecha", "Hora", "Día/Noche", "Satélite", "FRP (MW)", "Brillantez", "Brillo T31", "Confianza"),
+        colnames = c(
+          "AC", "ASP", "Fecha", "Hora", 
+          "Día/Noche", "Satélite", "FRP (MW)", 
+          "Brillantez", "Brillo T31", "Confianza"),
         options = list(                 
           pageLength = 10,
           language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
@@ -279,75 +398,274 @@ output$tabla <- renderDataTable({
   tabla
 })
 
-# Gráfico interactivo
-output$grafico <- renderPlotly({
+# Gráfico interactivo de cantidad de incendios en AC
+output$grafico_cantidad_incendios_ac <- renderPlotly({
   # Filtrar el conjunto de datos
-  areas_conservacion_incendios_filtradas <- 
-    filtrar_areas_conservacion_incendios()
+  ac_incendios_filtradas <- filtrar_ac_incendios()
   
   # Definir el gráfico ggplot2
-  g <- areas_conservacion_incendios_filtradas |>
-    ggplot(
-      aes(x = reorder(nombre_ac, incendios_n), y = incendios_n)
-    ) +
-    geom_col(
-      aes(
-        text = paste0("Cantidad de incendios: ", incendios_n)
-      ),
-      fill = "red"
-    ) +
-    xlab("Área de conservación") +
+  g <- ac_incendios_filtradas |>
+    ggplot(aes(x = reorder(nombre_ac, incendios_n), y = incendios_n)) +
+    geom_col(fill = "darkred") +
+    xlab("AC") +
     ylab("Cantidad de incendios") +
     coord_flip() +
     theme_minimal()
   
- # Mostrar el gráfico plotly
- ggplotly(g, tooltip = "text") |> 
-   config(locale = 'es')
+  # Convertir a plotly y agregar tooltip personalizado
+  ggplotly(g, tooltip = c("x", "y")) |> 
+    style(
+      hovertemplate = paste(
+        '%{y}<br>',
+        'Incendios: %{x}<br>',
+        '<extra></extra>'
+      )
+    ) |>
+    config(locale = 'es')
+})
+
+# Gráfico interactivo de cantidad de incendios en ASP
+output$grafico_cantidad_incendios_asp <- renderPlotly({
+  # Filtrar el conjunto de datos
+  asp_incendios_filtradas <- filtrar_asp_incendios()
+  
+  # Definir el gráfico ggplot2
+  g <- asp_incendios_filtradas |>
+    ggplot(aes(x = reorder(nombre_asp, incendios_n), y = incendios_n)) +
+    geom_col(fill = "darkgreen") +
+    xlab("ASP") +
+    ylab("Cantidad de incendios") +
+    coord_flip() +
+    theme_minimal()
+  
+  # Convertir a plotly con tooltip personalizado
+  ggplotly(g, tooltip = c("x", "y")) |> 
+    style(
+      hovertemplate = paste(
+        '%{y}<br>',
+        'Incendios: %{x}<br>',
+        '<extra></extra>'
+      )
+    ) |>
+    config(locale = 'es')
+})
+
+# Gráfico interactivo de cantidad de incendios por año
+output$grafico_cantidad_incendios_anio <- renderPlotly({
+  # Filtrar el conjunto de datos
+  incendios_filtrados <- filtrar_incendios()
+  
+  # Incendios agrupados por año
+  incendios_por_anio <-
+    incendios_filtrados |>
+    st_drop_geometry() |>
+    mutate(
+      anio = year(acq_date)
+    ) |>
+    group_by(anio) |>
+    summarise(
+      n       = n(),
+      .groups = "drop"
+    )
+  
+  cortes_anios <- c(2001, 2005, 2010, 2015, 2020, 2024)
+  lim_x <- range(cortes_anios)
+  
+  # Serie base con tooltips
+  serie_na <-
+    incendios_por_anio |>
+    dplyr::arrange(anio) |>
+    dplyr::mutate(
+      tt_n = paste0(
+        "Año: ", anio,
+        "<br>Cantidad de incendios: ", scales::comma(n)
+      )
+    )
+  
+  # Datos para líneas de tendencia (ignorar NA)
+  df_n <- tidyr::drop_na(serie_na, n)
+  
+  pred_n <- tibble::tibble(
+    anio = df_n$anio,
+    yhat = predict(stats::lm(n ~ anio, data = df_n), newdata = df_n)
+  )
+  
+  # Plotly con doble eje (izq: área; der: cantidad)
+  fig <- plotly::plot_ly() |>
+    plotly::add_lines(
+    data = serie_na,
+    x = ~anio, y = ~n,
+    name = "Cantidad de incendios",
+    line = list(color = "red", width = 2)
+  ) |>
+  plotly::add_lines(
+    data = pred_n, x = ~anio, y = ~yhat,
+    showlegend = FALSE,
+    line = list(color ="red", dash = "dash", width = 1)
+  ) |>
+  plotly::layout(
+    xaxis = list(
+      title = "Año",
+      tickvals = cortes_anios,
+      range = c(min(lim_x), max(lim_x))
+    ),
+    yaxis2 = list(
+      title = list(text = "Cantidad de incendios", standoff = 16),
+      overlaying = "y",
+      side = "right",
+      tickformat = ",.0f",
+      automargin = TRUE
+    ),
+    legend = list(orientation = "h", x = 0, y = 1.15),
+    margin = list(t = 90, r = 80, b = 60, l = 60)
+  ) |>
+  plotly::config(locale = "es", displayModeBar = TRUE)
+
+  fig
 })
 
 # Mapa interactivo
 output$mapa <- renderTmap({
   # Filtrar conjuntos de datos
-  incendios_filtrados <- 
-    filtrar_incendios()
-  areas_conservacion_incendios_filtradas <- 
-    filtrar_areas_conservacion_incendios()
+  incendios_filtrados     <- filtrar_incendios()
+  ac_incendios_filtradas  <- filtrar_ac_incendios()
+  asp_incendios_filtradas <- filtrar_asp_incendios()
   
-  # Definir el mapa
-  tm_basemap("OpenStreetMap") +
-  tm_shape(areas_conservacion_incendios_filtradas, name = "Áreas de conservación") +
-    tm_polygons(
-      fill = "incendios_n",
-      fill.scale  = tm_scale_intervals(style = "quantile", values = "Reds"),
-      fill.legend = tm_legend(title = "Cantidad de incendios"),
-      fill_alpha = 0.3,
-      id = "nombre_ac",
-      popup.vars = c("AC" = "nombre_ac", "Incendios" = "incendios_n")
-    ) +
-    tm_borders(col = "darkgreen", lwd = 1.5) +
-  tm_shape(incendios_filtrados, name = "Incendios") +
-    tm_dots(
-      fill = "frp",
-      fill.scale = tm_scale_intervals(
-        style  = "quantile",
-        values = "inferno"
-      ),
-      fill.legend = tm_legend(title = "FRP (MW)"),
-      size = 0.5,
-      id = "frp",
-      popup.vars = c(
-        "Fecha"="acq_date", 
-        "Hora"="acq_time",
-        "Satélite"="satellite", 
-        "FRP (MW)"="frp",
-        "Confianza"="confidence", 
-        "Día/Noche"="daynight",
-        "AC" = "nombre_ac"
-      )
-    ) +
+  # Mapa base
+  mapa <- tm_basemap(c(
+    "CartoDB.Positron", 
+    "OpenStreetMap", 
+    "Esri.WorldImagery"
+  ))
+    
+  # Agregar capa de AC solo si hay datos
+  if (nrow(ac_incendios_filtradas) > 0) {
+    # Verificar variabilidad en los datos
+    valores_unicos_ac <- length(unique(ac_incendios_filtradas$incendios_n))
+    max_valor_ac <- max(ac_incendios_filtradas$incendios_n, na.rm = TRUE)
+    
+    if (valores_unicos_ac > 1 && max_valor_ac > 0) {
+      # Si hay variación y no todos son 0, usar escala de intervalos
+      mapa <- mapa +
+        tm_shape(ac_incendios_filtradas, name = "AC") +
+          tm_polygons(
+            fill = "incendios_n",
+            fill.scale = tm_scale_intervals(
+              style = "quantile", 
+              values = "brewer.reds",
+              n = min(5, valores_unicos_ac)
+            ),
+            fill.legend = tm_legend(title = "Incendios en AC"),
+            fill_alpha = 0.3,
+            id = "nombre_ac",
+            popup.vars = c("AC" = "nombre_ac", "Incendios" = "incendios_n")
+          ) +
+          tm_borders(col = "black", lwd = 1.5)
+    } else {
+      # Si todos los valores son iguales o todos son 0, usar color fijo
+      mapa <- mapa +
+        tm_shape(ac_incendios_filtradas, name = "AC") +
+          tm_polygons(
+            fill = "#fee5d9", # color fijo (rojo muy claro)
+            fill_alpha = 0.3,
+            id = "nombre_ac",
+            popup.vars = c("AC" = "nombre_ac", "Incendios" = "incendios_n")
+          ) +
+          tm_borders(col = "black", lwd = 1.5)
+    }
+  }
+  
+  # Agregar capa de ASP solo si hay datos
+  if (nrow(asp_incendios_filtradas) > 0) {
+    # Verificar variabilidad en los datos
+    valores_unicos_asp <- length(unique(asp_incendios_filtradas$incendios_n))
+    max_valor_asp <- max(asp_incendios_filtradas$incendios_n, na.rm = TRUE)
+    
+    if (valores_unicos_asp > 1 && max_valor_asp > 0) {
+      # Si hay variación y no todos son 0, usar escala de intervalos
+      mapa <- mapa +
+        tm_shape(asp_incendios_filtradas, name = "ASP") +
+          tm_polygons(
+            fill = "incendios_n",
+            fill.scale = tm_scale_intervals(
+              style = "quantile", 
+              values = "brewer.greens",
+              n = min(5, valores_unicos_asp)
+            ),
+            fill.legend = tm_legend(title = "Incendios en ASP"),
+            fill_alpha = 0.4,
+            id = "nombre_asp",
+            popup.vars = c("ASP" = "nombre_asp", "Incendios" = "incendios_n")
+          ) +
+          tm_borders(col = "darkblue", lwd = 1.2)
+    } else {
+      # Si todos los valores son iguales o todos son 0, usar color fijo
+      mapa <- mapa +
+        tm_shape(asp_incendios_filtradas, name = "ASP") +
+          tm_polygons(
+            fill = "#e5f5e0", # color fijo (verde muy claro)
+            fill_alpha = 0.4,
+            id = "nombre_asp",
+            popup.vars = c("ASP" = "nombre_asp", "Incendios" = "incendios_n")
+          ) +
+          tm_borders(col = "darkblue", lwd = 1.2)
+    }
+  }
+
+  # Agregar capa de incendios solo si hay datos
+  if (nrow(incendios_filtrados) > 0) {
+    # Verificar variabilidad en FRP
+    valores_unicos_frp <- length(unique(incendios_filtrados$frp))
+    
+    if (valores_unicos_frp > 1) {
+      # Si hay variación en FRP, usar escala de intervalos
+      mapa <- mapa +
+        tm_shape(incendios_filtrados, name = "Incendios") +
+        tm_dots(
+          fill = "frp",
+          fill.scale = tm_scale_intervals(
+            style = "quantile",
+            values = "inferno",
+            n = min(5, valores_unicos_frp)
+          ),
+          fill.legend = tm_legend(title = "FRP (MW)"),
+          size = 0.5,
+          id = "frp",
+          popup.vars = c(
+            "Fecha" = "acq_date", 
+            "Hora" = "acq_time",
+            "Satélite" = "satellite", 
+            "FRP (MW)" = "frp",
+            "Confianza" = "confidence", 
+            "Día/Noche" = "daynight",
+            "AC" = "nombre_ac",
+            "ASP" = "nombre_asp"
+          )
+        )
+    } else {
+      # Si todos los valores de FRP son iguales, usar color fijo
+      mapa <- mapa +
+        tm_shape(incendios_filtrados, name = "Incendios") +
+          tm_dots(
+            fill = "red",  
+            size = 0.5,
+            popup.vars = c(
+              "Fecha" = "acq_date", 
+              "Hora" = "acq_time",
+              "Satélite" = "satellite", 
+              "FRP (MW)" = "frp",
+              "Confianza" = "confidence", 
+              "Día/Noche" = "daynight",
+              "AC" = "nombre_ac",
+              "ASP" = "nombre_asp"
+            )
+          )
+    }
+  }
+  
+  # Agregar elementos de control del mapa
+  mapa +
     tm_scalebar(position = c("left", "bottom")) +
-    tm_compass(position = c("right","top")) +
-    tm_view(bbox = st_bbox(incendios_filtrados))
-  })
+    tm_compass(position = c("right", "top"))
+})
 ```
