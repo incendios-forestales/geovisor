@@ -311,75 +311,60 @@ tmap_mode("view")
 # Parámetros generales
 CONFIANZA_MINIMA          <- 100
 CONFIANZA_MINIMA_ABSOLUTA <- 0
-FECHA_MINIMA <- "2001-01-01"
-FECHA_MAXIMA <- "2024-12-31"
+FECHA_MINIMA <- as.Date("2001-01-01")
+FECHA_MAXIMA <- as.Date("2024-12-31")
+RUTA_DATOS <- "datos/procesados"
 </script>
  
 <script type="application/shiny-prerendered" data-context="data">
+ac        <- readRDS(file.path(RUTA_DATOS, "ac.rds"))
+asp       <- readRDS(file.path(RUTA_DATOS, "asp.rds"))
+incendios <- readRDS(file.path(RUTA_DATOS, "incendios.rds"))
+
 # Áreas de conservación (AC)
-ac <- st_read(
-  "datos/areas-conservacion.gpkg", 
-  quiet = TRUE
-) |>
-  st_make_valid()
+# ac <- st_read(
+#   "datos/areas-conservacion.gpkg", 
+#   quiet = TRUE
+# ) |>
+#   st_make_valid()
 
 # Áreas silvestres protegidas (ASP)
-asp <- st_read(
-  "datos/asp.gpkg", 
-  quiet = TRUE
-) |>
-  st_make_valid() |>
-  group_by(siglas_cat, nombre_asp) |>
-  summarize(
-    do_union = TRUE,
-    .groups = "drop"
-  ) |>
-  mutate(nombre_asp = paste(siglas_cat, nombre_asp)) |>
-  select(nombre_asp) |>
-  st_cast("MULTIPOLYGON")
+# asp <- st_read(
+#   "datos/asp.gpkg", 
+#   quiet = TRUE
+# ) |>
+#   st_make_valid() |>
+#   group_by(siglas_cat, nombre_asp) |>
+#   summarize(
+#     do_union = TRUE,
+#     .groups = "drop"
+#   ) |>
+#   mutate(nombre_asp = paste(siglas_cat, nombre_asp)) |>
+#   select(nombre_asp) |>
+#   st_cast("MULTIPOLYGON")
 
 # Incendios
-incendios <- st_read(
-  "datos/incendios-cr-modis.gpkg", 
-  quiet = TRUE
-) |>
-  mutate(
-    acq_date = as.Date(acq_date)
-  ) |>
-  filter(
-    confidence >= CONFIANZA_MINIMA_ABSOLUTA
-  ) |>
-  filter(
-    acq_date >= "2001-01-01" & acq_date <= "2024-12-31"
-  ) |>
-  st_join(
-    select(ac, nombre_ac),
-    join = st_intersects
-  ) |>
-  st_join(
-    select(asp, nombre_asp),
-    join = st_intersects
-  )
-
-# AC con estadísticas de incendios
-ac_incendios <- 
-  ac |>
-  left_join(
-    st_drop_geometry(incendios) |>
-      count(nombre_ac, name = "incendios_n"),
-    by = "nombre_ac"
-  ) |>
-  mutate(incendios_n = coalesce(incendios_n, 0L))
-
-# ASP con estadísticas de incendios
-asp_incendios <- 
-  asp |>
-  left_join(
-    st_drop_geometry(incendios) |>
-      count(nombre_asp, name = "incendios_n"),
-    by = "nombre_asp"
-  ) |>
-  mutate(incendios_n = coalesce(incendios_n, 0L))
+# incendios <- st_read(
+#   "datos/incendios-cr-modis.gpkg", 
+#   quiet = TRUE
+# ) |>
+#   mutate(
+#     acq_date = as.Date(acq_date)
+#   ) |>
+#   filter(
+#     confidence >= CONFIANZA_MINIMA_ABSOLUTA
+#   ) |>
+#   filter(
+#     acq_date >= FECHA_MINIMA & acq_date <= FECHA_MAXIMA
+#   ) |>
+#   st_join(
+#     select(ac, nombre_ac),
+#     join = st_intersects
+#   ) |>
+#   st_join(
+#     select(asp, nombre_asp),
+#     join = st_intersects
+#   )
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
@@ -655,8 +640,8 @@ output$grafico_cantidad_incendios_anio <- renderPlotly({
     plotly::layout(
       xaxis = list(
         title = "Año",
-        range = lim_x,  # Aplicar los límites dinámicos
-        dtick = 1       # Mostrar cada año
+        range = lim_x,  # aplicar los límites dinámicos
+        dtick = 1       # mostrar cada año
       ),
       yaxis = list(
         title = "Cantidad de incendios",
