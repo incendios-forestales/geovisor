@@ -23,7 +23,7 @@ CARPETA_ORIGEN    <- "datos"
 CARPETA_DESTINO   <- "datos/procesados"
 
 # Parámetros de filtrado inicial
-CONFIANZA_MINIMA_ABSOLUTA <- 0
+CONFIANZA_MINIMA_ABSOLUTA <- 80
 FECHA_MINIMA <- as.Date("2001-01-01")
 FECHA_MAXIMA <- as.Date("2024-12-31")
 
@@ -42,11 +42,11 @@ if (!dir.exists(CARPETA_DESTINO)) {
 }
 
 # -----------------------------------------------------------------------------
-# PROCESAR ÁREAS DE CONSERVACIÓN (AC)
+# CARGAR ÁREAS DE CONSERVACIÓN (AC) - SIN SIMPLIFICAR
 # -----------------------------------------------------------------------------
 
 message("\n", strrep("=", 60))
-message("Procesando Áreas de Conservación...")
+message("Cargando Áreas de Conservación...")
 message(strrep("=", 60))
 
 ac <- st_read(
@@ -55,27 +55,15 @@ ac <- st_read(
 ) |>
   st_make_valid()
 
-message("- Registros originales: ", nrow(ac))
-message("- Tamaño original: ", format(object.size(ac), units = "MB"))
-
-# Simplificar geometrías
-# ac_simple <- ac |>
-#   st_simplify(dTolerance = TOLERANCIA_SIMPLIFICACION, preserveTopology = TRUE) |>
-#   st_make_valid()
-ac_simple <- ac
-
-message("- Tamaño después de simplificar: ", format(object.size(ac_simple), units = "MB"))
-
-# Guardar
-saveRDS(ac_simple, file.path(CARPETA_DESTINO, "ac.rds"))
-message("- Guardado: ac.rds")
+message("- Registros: ", nrow(ac))
+message("- Tamaño: ", format(object.size(ac), units = "MB"))
 
 # -----------------------------------------------------------------------------
-# PROCESAR ÁREAS SILVESTRES PROTEGIDAS (ASP)
+# CARGAR ÁREAS SILVESTRES PROTEGIDAS (ASP) - SIN SIMPLIFICAR
 # -----------------------------------------------------------------------------
 
 message("\n", strrep("=", 60))
-message("Procesando Áreas Silvestres Protegidas...")
+message("Cargando Áreas Silvestres Protegidas...")
 message(strrep("=", 60))
 
 asp <- st_read(
@@ -92,23 +80,11 @@ asp <- st_read(
   select(nombre_asp) |>
   st_cast("MULTIPOLYGON")
 
-message("- Registros originales: ", nrow(asp))
-message("- Tamaño original: ", format(object.size(asp), units = "MB"))
-
-# Simplificar geometrías
-# asp_simple <- asp |>
-#   st_simplify(dTolerance = TOLERANCIA_SIMPLIFICACION, preserveTopology = TRUE) |>
-#   st_make_valid()
-asp_simple <- asp
-
-message("- Tamaño después de simplificar: ", format(object.size(asp_simple), units = "MB"))
-
-# Guardar
-saveRDS(asp_simple, file.path(CARPETA_DESTINO, "asp.rds"))
-message("- Guardado: asp.rds")
+message("- Registros: ", nrow(asp))
+message("- Tamaño: ", format(object.size(asp), units = "MB"))
 
 # -----------------------------------------------------------------------------
-# PROCESAR INCENDIOS (CON SPATIAL JOIN PRE-CALCULADO)
+# PROCESAR INCENDIOS CON SPATIAL JOIN (usando geometrías completas)
 # -----------------------------------------------------------------------------
 
 message("\n", strrep("=", 60))
@@ -134,8 +110,8 @@ incendios <- incendios_raw |>
 
 message("- Registros después de filtrar: ", nrow(incendios))
 
-# SPATIAL JOIN (esto es lo más costoso - se hace UNA SOLA VEZ)
-message("\n- Ejecutando spatial join con AC (esto puede tardar unos minutos)...")
+# SPATIAL JOIN con geometrías COMPLETAS para máxima precisión
+message("\n- Ejecutando spatial join con AC (geometría completa)...")
 t1 <- Sys.time()
 
 incendios <- incendios |>
@@ -146,7 +122,7 @@ incendios <- incendios |>
 
 message("  Completado en ", round(difftime(Sys.time(), t1, units = "secs"), 1), " segundos")
 
-message("- Ejecutando spatial join con ASP...")
+message("- Ejecutando spatial join con ASP (geometría completa)...")
 t2 <- Sys.time()
 
 incendios <- incendios |>
@@ -167,9 +143,41 @@ incendios <- incendios |>
 
 message("- Tamaño final: ", format(object.size(incendios), units = "MB"))
 
-# Guardar
+# Guardar incendios
 saveRDS(incendios, file.path(CARPETA_DESTINO, "incendios.rds"))
 message("- Guardado: incendios.rds")
+
+# -----------------------------------------------------------------------------
+# SIMPLIFICAR GEOMETRÍAS DE AC Y ASP (después del spatial join)
+# -----------------------------------------------------------------------------
+
+message("\n", strrep("=", 60))
+message("Simplificando geometrías para visualización...")
+message(strrep("=", 60))
+
+# Simplificar AC
+message("- Simplificando AC...")
+ac_simple <- ac |>
+  st_simplify(dTolerance = TOLERANCIA_SIMPLIFICACION, preserveTopology = TRUE) |>
+  st_make_valid()
+
+message("  Tamaño original: ", format(object.size(ac), units = "MB"))
+message("  Tamaño simplificado: ", format(object.size(ac_simple), units = "MB"))
+
+saveRDS(ac_simple, file.path(CARPETA_DESTINO, "ac.rds"))
+message("  Guardado: ac.rds")
+
+# Simplificar ASP
+message("- Simplificando ASP...")
+asp_simple <- asp |>
+  st_simplify(dTolerance = TOLERANCIA_SIMPLIFICACION, preserveTopology = TRUE) |>
+  st_make_valid()
+
+message("  Tamaño original: ", format(object.size(asp), units = "MB"))
+message("  Tamaño simplificado: ", format(object.size(asp_simple), units = "MB"))
+
+saveRDS(asp_simple, file.path(CARPETA_DESTINO, "asp.rds"))
+message("  Guardado: asp.rds")
 
 # -----------------------------------------------------------------------------
 # CREAR LISTAS PARA SELECTORES
@@ -216,6 +224,6 @@ message(sprintf("  TOTAL: %s", format(structure(total_size, class = "object_size
 message("\n¡Pre-procesamiento completado!")
 message("Ahora puede usarse el dashboard optimizado con estos datos.")
 message("\nPróximos pasos:")
-message("1. Verificar que los archivos en 'datos/procesados/' se crearon correctamente")
-message("2. Usarlos en 'geovisor.qmd'")
-message("3. Desplegar en shinyapps.io incluyendo la carpeta 'datos/procesados/'")
+message("1. Verificar que los archivos en 'datos/procesados/' se crearon correctamente.")
+message("2. Usarlos en 'geovisor.qmd'.")
+message("3. Desplegar en shinyapps.io incluyendo la carpeta 'datos/procesados/'.")
