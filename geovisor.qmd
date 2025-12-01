@@ -1,5 +1,5 @@
 ---
-title: "Incendios forestales en Costa Rica" 
+title: "Incendios forestales en Costa Rica"
 format: dashboard
 orientation: columns
 server: shiny
@@ -25,8 +25,8 @@ library(scales)
 tmap_mode("view")
 
 # Parámetros generales
-CONFIANZA_MINIMA          <- 100
-CONFIANZA_MINIMA_ABSOLUTA <- 0
+CONFIANZA_MINIMA          <- 80
+CONFIANZA_MINIMA_ABSOLUTA <- 80
 FECHA_MINIMA <- as.Date("2001-01-01")
 FECHA_MAXIMA <- as.Date("2024-12-31")
 RUTA_DATOS <- "datos/procesados"
@@ -41,51 +41,6 @@ RUTA_DATOS <- "datos/procesados"
 ac        <- readRDS(file.path(RUTA_DATOS, "ac.rds"))
 asp       <- readRDS(file.path(RUTA_DATOS, "asp.rds"))
 incendios <- readRDS(file.path(RUTA_DATOS, "incendios.rds"))
-
-# Áreas de conservación (AC)
-# ac <- st_read(
-#   "datos/areas-conservacion.gpkg", 
-#   quiet = TRUE
-# ) |>
-#   st_make_valid()
-
-# Áreas silvestres protegidas (ASP)
-# asp <- st_read(
-#   "datos/asp.gpkg", 
-#   quiet = TRUE
-# ) |>
-#   st_make_valid() |>
-#   group_by(siglas_cat, nombre_asp) |>
-#   summarize(
-#     do_union = TRUE,
-#     .groups = "drop"
-#   ) |>
-#   mutate(nombre_asp = paste(siglas_cat, nombre_asp)) |>
-#   select(nombre_asp) |>
-#   st_cast("MULTIPOLYGON")
-
-# Incendios
-# incendios <- st_read(
-#   "datos/incendios-cr-modis.gpkg", 
-#   quiet = TRUE
-# ) |>
-#   mutate(
-#     acq_date = as.Date(acq_date)
-#   ) |>
-#   filter(
-#     confidence >= CONFIANZA_MINIMA_ABSOLUTA
-#   ) |>
-#   filter(
-#     acq_date >= FECHA_MINIMA & acq_date <= FECHA_MAXIMA
-#   ) |>
-#   st_join(
-#     select(ac, nombre_ac),
-#     join = st_intersects
-#   ) |>
-#   st_join(
-#     select(asp, nombre_asp),
-#     join = st_intersects
-#   )
 ```
 
 # {.sidebar width="15%"}
@@ -317,6 +272,7 @@ filtrar_ac_incendios <- reactive({
         by = "nombre_ac"
       ) |>
       mutate(incendios_n = coalesce(incendios_n, 0L)) |>
+      filter(incendios_n > 0) |>
       arrange(incendios_n)
   } else {
     # Si no hay incendios, devolver data frame vacío con estructura correcta
@@ -342,12 +298,13 @@ filtrar_asp_incendios <- reactive({
     # Si hay incendios en ASP, proceder normalmente
     asp_incendios_filtradas <- 
       asp |>
-      inner_join(
+      left_join(
         st_drop_geometry(incendios_filtrados) |>
           count(nombre_asp, name = "incendios_n"),
         by = "nombre_asp"
       ) |>
       mutate(incendios_n = coalesce(incendios_n, 0L)) |>
+      filter(incendios_n > 0) |>
       arrange(incendios_n)
   } else {
     # Si no hay incendios, devolver data frame vacío con estructura correcta
