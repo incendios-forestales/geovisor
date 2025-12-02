@@ -76,7 +76,14 @@ asp <- st_read(
     do_union = TRUE,
     .groups = "drop"
   ) |>
-  mutate(nombre_asp = paste(siglas_cat, nombre_asp)) |>
+  mutate(
+    nombre_asp = paste(siglas_cat, nombre_asp),
+    nombre_asp = case_when(
+      nombre_asp == "HH Estero Puntarenas y Manglares Asociados" ~ "HH Estero Puntarenas",
+      nombre_asp == "HH Humedal lacustrino Rio Canas" ~ "HH Rio Canas",
+      .default = nombre_asp
+    )
+  ) |>
   select(nombre_asp) |>
   st_cast("MULTIPOLYGON")
 
@@ -92,7 +99,7 @@ message("Procesando Incendios...")
 message(strrep("=", 60))
 
 incendios_raw <- st_read(
-  file.path(CARPETA_ORIGEN, "incendios-cr-modis.gpkg"),
+  file.path(CARPETA_ORIGEN, "incendios_clima_cr_2001-2024.gpkg"),
   quiet = TRUE
 )
 
@@ -136,9 +143,10 @@ message("  Completado en ", round(difftime(Sys.time(), t2, units = "secs"), 1), 
 # Seleccionar solo columnas necesarias para reducir tamaño
 incendios <- incendios |>
   select(
-    acq_date, acq_time, satellite, confidence,
-    frp, brightness, bright_t31, daynight,
-    nombre_ac, nombre_asp
+    nombre_ac, nombre_asp, acq_date, acq_time,
+    frp, brightness, confidence,
+    TEMPERATURE_2M_ACQ_DATE_MEAN, PRECIPITATION_ACQ_DATE_SUM,
+    X10M_WIND_SPEED_ACQ_DATE_MEAN, X10M_WIND_DIRECTION_ACQ_DATE_MEAN
   )
 
 message("- Tamaño final: ", format(object.size(incendios), units = "MB"))
@@ -212,7 +220,7 @@ message(strrep("=", 60))
 archivos <- list.files(CARPETA_DESTINO, pattern = "\\.rds$", full.names = TRUE)
 for (archivo in archivos) {
   info <- file.info(archivo)
-  message(sprintf("  %-25s %s", 
+  message(sprintf("  %-25s %s %s", 
                   basename(archivo), 
                   format(info$size, big.mark = ","), " bytes"))
 }
