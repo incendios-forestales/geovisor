@@ -327,20 +327,28 @@ output$tabla_registros_incendios <- renderDataTable({
       st_drop_geometry() |>
       dplyr::select(
         nombre_ac, nombre_asp, acq_date, acq_time, 
-        daynight, satellite, frp, 
-        brightness, bright_t31, confidence
+        frp, brightness, confidence,
+        TEMPERATURE_2M_ACQ_DATE_MEAN, PRECIPITATION_ACQ_DATE_SUM,
+        X10M_WIND_SPEED_ACQ_DATE_MEAN, X10M_WIND_DIRECTION_ACQ_DATE_MEAN
       ) |>
       arrange(desc(acq_date)) |>                 
       datatable(
         rownames = FALSE,
         colnames = c(
           "AC", "ASP", "Fecha", "Hora", 
-          "Día/Noche", "Satélite", "FRP (MW)", 
-          "Brillantez", "Brillo T31", "Confianza"),
+          "FRP (MW)", "Brillantez", "Confianza",
+          "Temp. (°C)", "Prec. (mm)",
+          "Vel. viento (m/s)", "Dir. viento (°)"
+        ),
         options = list(                 
           pageLength = 10,
           language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
-        )    
+        )
+      ) |>
+      formatRound(
+        columns = c("TEMPERATURE_2M_ACQ_DATE_MEAN", "PRECIPITATION_ACQ_DATE_SUM", 
+                    "X10M_WIND_SPEED_ACQ_DATE_MEAN", "X10M_WIND_DIRECTION_ACQ_DATE_MEAN"),
+        digits = 1
       )
   
   # Mostrar la tabla
@@ -578,7 +586,14 @@ output$grafico_cantidad_incendios_anio_mes <- renderPlot({
 # Mapa interactivo
 output$mapa <- renderTmap({
   # Filtrar conjuntos de datos
-  incendios_filtrados     <- filtrar_incendios()
+  incendios_filtrados <- filtrar_incendios() |>
+    mutate(
+      across(
+        c(TEMPERATURE_2M_ACQ_DATE_MEAN, PRECIPITATION_ACQ_DATE_SUM,
+          X10M_WIND_SPEED_ACQ_DATE_MEAN, X10M_WIND_DIRECTION_ACQ_DATE_MEAN),
+        ~ round(.x, 1)
+      )
+    )
   ac_incendios_filtradas  <- filtrar_ac_incendios()
   asp_incendios_filtradas <- filtrar_asp_incendios()
   
@@ -681,16 +696,15 @@ output$mapa <- renderTmap({
           ),
           fill.legend = tm_legend(title = "FRP (MW)"),
           size = 0.5,
-          id = "frp",
           popup.vars = c(
-            "Fecha" = "acq_date", 
-            "Hora" = "acq_time",
-            "Satélite" = "satellite", 
-            "FRP (MW)" = "frp",
+            "AC" = "nombre_ac", "ASP" = "nombre_asp",            
+            "Fecha" = "acq_date", "Hora" = "acq_time",
+            "FRP (MW)" = "frp", "Brillantez" = "brightness",
             "Confianza" = "confidence", 
-            "Día/Noche" = "daynight",
-            "AC" = "nombre_ac",
-            "ASP" = "nombre_asp"
+            "Temperatura a 2m (°C)" = "TEMPERATURE_2M_ACQ_DATE_MEAN",
+            "Precipitación (mm)" = "PRECIPITATION_ACQ_DATE_SUM",
+            "Velocidad del viento (m/s)" = "X10M_WIND_SPEED_ACQ_DATE_MEAN",
+            "Dirección del viento (°)" = "X10M_WIND_DIRECTION_ACQ_DATE_MEAN"
           )
         )
     } else {
@@ -701,14 +715,14 @@ output$mapa <- renderTmap({
             fill = "red",  
             size = 0.5,
             popup.vars = c(
-              "Fecha" = "acq_date", 
-              "Hora" = "acq_time",
-              "Satélite" = "satellite", 
-              "FRP (MW)" = "frp",
-              "Confianza" = "confidence", 
-              "Día/Noche" = "daynight",
-              "AC" = "nombre_ac",
-              "ASP" = "nombre_asp"
+            "AC" = "nombre_ac", "ASP" = "nombre_asp",            
+            "Fecha" = "acq_date", "Hora" = "acq_time",
+            "FRP (MW)" = "frp", "Brillantez" = "brightness",
+            "Confianza" = "confidence", 
+            "Temperatura a 2m (°C)" = "TEMPERATURE_2M_ACQ_DATE_MEAN",
+            "Precipitación (mm)" = "PRECIPITATION_ACQ_DATE_SUM",
+            "Velocidad del viento (m/s)" = "X10M_WIND_SPEED_ACQ_DATE_MEAN",
+            "Dirección del viento (°)" = "X10M_WIND_DIRECTION_ACQ_DATE_MEAN"
             )
           )
     }
