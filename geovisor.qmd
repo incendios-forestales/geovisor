@@ -20,6 +20,7 @@ library(sf)
 library(tmap)
 library(shiny)
 library(scales)
+library(classInt)
 
 # Especificar modo interactivo para tmap
 tmap_mode("view")
@@ -191,7 +192,7 @@ plotlyOutput(
 #| title: "Cantidad de incendios por año y mes"
 
 # Gráfico
-plotOutput(
+plotlyOutput(
     outputId =  "grafico_cantidad_incendios_anio_mes"
 )
 ```
@@ -374,7 +375,7 @@ output$grafico_cantidad_incendios_ac <- renderPlotly({
     style(
       hovertemplate = paste(
         '%{y}<br>',
-        'Incendios: %{x}<br>',
+        'Incendios: %{x:.0f}<br>',
         '<extra></extra>'
       )
     ) |>
@@ -400,7 +401,7 @@ output$grafico_cantidad_incendios_asp <- renderPlotly({
     style(
       hovertemplate = paste(
         '%{y}<br>',
-        'Incendios: %{x}<br>',
+        'Incendios: %{x:.0f}<br>',
         '<extra></extra>'
       )
     ) |>
@@ -485,7 +486,12 @@ output$grafico_cantidad_incendios_anio <- renderPlotly({
         name = "Tendencia",
         showlegend = TRUE,
         line = list(color = "red", dash = "dash", width = 1),
-        hovertemplate = "Tendencia<extra></extra>"
+        hovertemplate = paste0(
+        "Tendencia",
+        "<br>Año: %{x}",
+        "<br>Valor: %{y:,.0f}",
+        "<extra></extra>"
+      )
       )
   }
   
@@ -511,7 +517,7 @@ output$grafico_cantidad_incendios_anio <- renderPlotly({
 })
 
 # Gráfico interactivo de cantidad de incendios por año
-output$grafico_cantidad_incendios_anio_mes <- renderPlot({
+output$grafico_cantidad_incendios_anio_mes <- renderPlotly({
   # Filtrar el conjunto de datos
   incendios_filtrados <- filtrar_incendios()
   
@@ -523,10 +529,7 @@ output$grafico_cantidad_incendios_anio_mes <- renderPlot({
       mes  = month(acq_date, label = TRUE, abbr = TRUE)
     ) |>
     group_by(anio, mes) |>
-    summarize(
-      n                                         = n(),
-      .groups                                   = "drop"
-    )
+    summarize(n = n(), .groups = "drop")
 
   # Asegurar que los meses queden en orden enero-diciembre
   incendios_por_anio_mes$mes <- factor(
@@ -574,12 +577,13 @@ output$grafico_cantidad_incendios_anio_mes <- renderPlot({
     )
   
   # Convertir a gráfico interactivo plotly
-  # g_interactivo <- 
-  #   ggplotly(g, tooltip = "text", height = 700) |> 
-  #   config(locale = 'es')
+  g_interactivo <- 
+   ggplotly(g, tooltip = "text") |> 
+   config(locale = 'es')
   
   # Mostrar gráfico
-  g
+  # g
+  g_interactivo
   
 })
   
@@ -617,7 +621,7 @@ output$mapa <- renderTmap({
           tm_polygons(
             fill = "incendios_n",
             fill.scale = tm_scale_intervals(
-              style = "quantile", 
+              style = "pretty", 
               values = "brewer.reds",
               n = min(5, valores_unicos_ac)
             ),
@@ -654,7 +658,7 @@ output$mapa <- renderTmap({
           tm_polygons(
             fill = "incendios_n",
             fill.scale = tm_scale_intervals(
-              style = "quantile", 
+              style = "pretty", 
               values = "brewer.greens",
               n = min(5, valores_unicos_asp)
             ),
