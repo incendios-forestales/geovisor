@@ -1,0 +1,3468 @@
+---
+title: "Incendios forestales en Costa Rica"
+format: dashboard
+orientation: columns
+server: shiny
+theme: united
+---
+
+```{r}
+#| label: carga-bibliotecas
+#| context: setup
+#| warning: false
+#| message: false
+
+# Carga de bibliotecas
+library(tidyverse)
+library(DT)
+library(plotly)
+library(sf)
+library(tmap)
+library(shiny)
+library(scales)
+library(classInt)
+
+# Especificar modo interactivo para tmap
+tmap_mode("view")
+
+# Parámetros generales
+CONFIANZA_MINIMA          <- 80
+CONFIANZA_MINIMA_ABSOLUTA <- 80
+FECHA_MINIMA <- as.Date("2001-01-01")
+FECHA_MAXIMA <- as.Date("2024-12-31")
+RUTA_DATOS <- "datos/procesados"
+```
+
+```{r}
+#| label: carga-datos
+#| context: data 
+#| warning: false
+#| message: false
+
+ac        <- readRDS(file.path(RUTA_DATOS, "ac.rds"))
+asp       <- readRDS(file.path(RUTA_DATOS, "asp.rds"))
+incendios <- readRDS(file.path(RUTA_DATOS, "incendios.rds"))
+```
+
+# {.sidebar width="15%"}
+
+```{r}
+#| label: slider-confianza-minima
+
+# Confianza mínima y máxima
+confianza_minima <- min(incendios$confidence, na.rm = TRUE)
+confianza_maxima <- max(incendios$confidence, na.rm = TRUE)
+
+# Control de entrada de confianza mínima
+sliderInput(
+  inputId = "confianza_minima", 
+  label = "Confianza mínima",
+  min = confianza_minima, 
+  max = confianza_maxima, 
+  value = CONFIANZA_MINIMA, 
+  step = 1
+)
+```
+
+```{r}
+#| label: slider-frp
+
+# FRP mínimo y máximo 
+frp_minimo <- min(incendios$frp, na.rm = TRUE)
+frp_maximo <- max(incendios$frp, na.rm = TRUE)
+
+# Control de entrada de FRP
+sliderInput(
+  inputId = "frp",
+  label   = "Potencia radiativa del fuego - FRP (MW)",
+  min     = frp_minimo,   
+  max     = frp_maximo,   
+  value   = c(frp_minimo, frp_maximo), 
+  step    = 1,    
+  round   = TRUE, 
+  sep     = ""    
+)
+```
+
+```{r}
+#| label: slider-fecha
+
+# Fechas mínima y máxima
+fecha_minima <- min(incendios$acq_date, na.rm = TRUE)
+fecha_maxima <- max(incendios$acq_date, na.rm = TRUE)
+
+# Control de entrada de fecha
+dateRangeInput(
+  inputId = "fecha",
+  label   = "Fecha",
+  start   = fecha_minima,
+  end     = fecha_maxima,
+  min     = fecha_minima,
+  max     = fecha_maxima,
+  format  = "yyyy-mm-dd",
+  weekstart = 1,
+  language  = "es"
+)
+```
+
+```{r}
+#| label: select-ac
+
+# Lista ordenada de AC
+lista_ac <- unique(incendios$nombre_ac)
+lista_ac <- sort(lista_ac)
+lista_ac <- c("Todas", lista_ac)
+
+# Control de entrada de AC
+selectInput(
+  inputId  = "ac",
+  label    = "Área de Conservación (AC)",
+  choices  = lista_ac,
+  selected = "Todas"
+)
+```
+
+```{r}
+#| label: select-asp
+
+# Lista ordenada de ASP
+lista_asp <- unique(incendios$nombre_asp)
+lista_asp <- sort(lista_asp)
+lista_asp <- c("Todas", lista_asp)
+
+# Control de entrada de ASP
+selectInput(
+  inputId  = "asp",
+  label    = "Área Silvestre Protegida (ASP)",
+  choices  = lista_asp,
+  selected = "Todas"
+)
+```
+
+# Análisis espacial
+
+## Mapa {width="75%"}
+
+```{r}
+#| label: salida-mapa
+#| title: "Distribución de incendios en Áreas de Conservación (AC) y Áreas Silvestres Protegidas (ASP)"
+
+# Mapa
+tmapOutput(
+    outputId =  "mapa"
+)
+```
+
+## Gráficos {width="25%"}
+
+```{r}
+#| label: salida-grafico-cantidad-incendios-ac
+#| title: "Cantidad de incendios en AC"
+
+# Gráfico
+plotlyOutput(
+    outputId =  "grafico_cantidad_incendios_ac"
+)
+```
+
+```{r}
+#| label: salida-grafico-cantidad-incendios-asp
+#| title: "Cantidad de incendios en ASP"
+
+# Gráfico
+plotlyOutput(
+    outputId =  "grafico_cantidad_incendios_asp"
+)
+```
+
+# Análisis temporal
+
+```{r}
+#| label: salida-grafico-cantidad-incendios-anio
+#| title: "Cantidad de incendios por año"
+
+# Gráfico
+plotlyOutput(
+    outputId =  "grafico_cantidad_incendios_anio"
+)
+```
+
+```{r}
+#| label: salida-grafico-cantidad-incendios-anio-mes
+#| title: "Cantidad de incendios por año y mes"
+
+# Gráfico
+plotlyOutput(
+    outputId =  "grafico_cantidad_incendios_anio_mes"
+)
+```
+
+# Registros de incendios
+
+```{r}
+#| label: salida-tabla
+#| title: "Registros de incendios"
+
+# Tabla
+dataTableOutput(
+    outputId =  "tabla_registros_incendios"
+)
+```
+
+# Análisis de temperatura
+
+## Column {width="20%"}
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-tendencia-temp
+#| title: "Tendencia de temperatura"
+
+htmlOutput("card_tendencia_temp")
+```
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-tendencia-incendios
+#| title: "Tendencia de incendios"
+
+htmlOutput("card_tendencia_incendios")
+```
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-correlacion
+#| title: "Correlación Temp-Incendios"
+
+htmlOutput("card_correlacion")
+```
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-cambio-periodo
+#| title: "Cambio 2013-24 vs 2001-12"
+
+htmlOutput("card_cambio_periodo")
+```
+
+## Column {width="80%"}
+
+### Row {height="50%"}
+
+```{r}
+#| label: salida-grafico-tendencias-duales
+#| title: "Tendencias de temperatura e incendios"
+
+plotlyOutput("grafico_tendencias_duales")
+```
+
+```{r}
+#| label: salida-grafico-correlacion
+#| title: "Correlación temperatura - incendios"
+
+plotlyOutput("grafico_correlacion")
+```
+
+### Row {height="50%"}
+
+```{r}
+#| label: salida-grafico-comparacion-periodos
+#| title: "Comparación entre períodos (2001-2012 vs 2013-2024)"
+
+plotlyOutput("grafico_comparacion_periodos")
+```
+
+```{r}
+#| label: salida-grafico-anomalias
+#| title: "Anomalías de temperatura y cantidad de incendios"
+
+plotlyOutput("grafico_anomalias")
+```
+
+# Análisis de precipitación
+
+## Column {width="20%"}
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-tendencia-precip
+#| title: "Tendencia de precipitación"
+
+htmlOutput("card_tendencia_precip")
+```
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-tendencia-incendios-precip
+#| title: "Tendencia de incendios"
+
+htmlOutput("card_tendencia_incendios_precip")
+```
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-correlacion-precip
+#| title: "Correlación Precip-Incendios"
+
+htmlOutput("card_correlacion_precip")
+```
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-cambio-periodo-precip
+#| title: "Cambio 2013-24 vs 2001-12"
+
+htmlOutput("card_cambio_periodo_precip")
+```
+
+## Column {width="80%"}
+
+### Row {height="50%"}
+
+```{r}
+#| label: salida-grafico-tendencias-precip
+#| title: "Tendencias de precipitación e incendios"
+
+plotlyOutput("grafico_tendencias_precip")
+```
+
+```{r}
+#| label: salida-grafico-correlacion-precip
+#| title: "Correlación precipitación - incendios"
+
+plotlyOutput("grafico_correlacion_precip")
+```
+
+### Row {height="50%"}
+
+```{r}
+#| label: salida-grafico-comparacion-periodos-precip
+#| title: "Comparación entre períodos (2001-2012 vs 2013-2024)"
+
+plotlyOutput("grafico_comparacion_periodos_precip")
+```
+
+```{r}
+#| label: salida-grafico-anomalias-precip
+#| title: "Anomalías de precipitación y cantidad de incendios"
+
+plotlyOutput("grafico_anomalias_precip")
+```
+
+# Análisis de velocidad del viento
+
+## Column {width="20%"}
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-tendencia-viento
+#| title: "Tendencia de viento"
+
+htmlOutput("card_tendencia_viento")
+```
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-tendencia-incendios-viento
+#| title: "Tendencia de incendios"
+
+htmlOutput("card_tendencia_incendios_viento")
+```
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-correlacion-viento
+#| title: "Correlación Viento-Incendios"
+
+htmlOutput("card_correlacion_viento")
+```
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-cambio-periodo-viento
+#| title: "Cambio 2013-24 vs 2001-12"
+
+htmlOutput("card_cambio_periodo_viento")
+```
+
+## Column {width="80%"}
+
+### Row {height="50%"}
+
+```{r}
+#| label: salida-grafico-tendencias-viento
+#| title: "Tendencias de velocidad del viento e incendios"
+
+plotlyOutput("grafico_tendencias_viento")
+```
+
+```{r}
+#| label: salida-grafico-correlacion-viento
+#| title: "Correlación velocidad del viento - incendios"
+
+plotlyOutput("grafico_correlacion_viento")
+```
+
+### Row {height="50%"}
+
+```{r}
+#| label: salida-grafico-comparacion-periodos-viento
+#| title: "Comparación entre períodos (2001-2012 vs 2013-2024)"
+
+plotlyOutput("grafico_comparacion_periodos_viento")
+```
+
+```{r}
+#| label: salida-grafico-anomalias-viento
+#| title: "Anomalías de velocidad del viento y cantidad de incendios"
+
+plotlyOutput("grafico_anomalias_viento")
+```
+
+# Análisis de dirección del viento
+
+## Column {width="20%"}
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-direccion-predominante
+#| title: "Dirección predominante"
+
+htmlOutput("card_direccion_predominante")
+```
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-tendencia-incendios-direccion
+#| title: "Tendencia de incendios"
+
+htmlOutput("card_tendencia_incendios_direccion")
+```
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-variabilidad-direccion
+#| title: "Variabilidad de dirección"
+
+htmlOutput("card_variabilidad_direccion")
+```
+
+### Row {height="25%"}
+
+```{r}
+#| label: card-cambio-periodo-direccion
+#| title: "Cambio 2013-24 vs 2001-12"
+
+htmlOutput("card_cambio_periodo_direccion")
+```
+
+## Column {width="80%"}
+
+### Row {height="50%"}
+
+```{r}
+#| label: salida-grafico-rosa-vientos
+#| title: "Rosa de vientos e incendios"
+
+plotlyOutput("grafico_rosa_vientos")
+```
+
+```{r}
+#| label: salida-grafico-direccion-incendios
+#| title: "Dirección del viento vs incendios por sector"
+
+plotlyOutput("grafico_direccion_incendios")
+```
+
+### Row {height="50%"}
+
+```{r}
+#| label: salida-grafico-direccion-temporal
+#| title: "Dirección del viento promedio por año"
+
+plotlyOutput("grafico_direccion_temporal")
+```
+
+```{r}
+#| label: salida-grafico-direccion-mensual
+#| title: "Dirección del viento e incendios por mes"
+
+plotlyOutput("grafico_direccion_mensual")
+```
+
+# Análisis integrado
+
+## Column {width="20%"}
+
+### Row {height="20%"}
+
+```{r}
+#| label: card-resumen-temp
+#| title: "Temperatura"
+
+htmlOutput("card_resumen_temp")
+```
+
+### Row {height="20%"}
+
+```{r}
+#| label: card-resumen-precip
+#| title: "Precipitación"
+
+htmlOutput("card_resumen_precip")
+```
+
+### Row {height="20%"}
+
+```{r}
+#| label: card-resumen-viento
+#| title: "Viento"
+
+htmlOutput("card_resumen_viento")
+```
+
+### Row {height="20%"}
+
+```{r}
+#| label: card-resumen-incendios
+#| title: "Incendios"
+
+htmlOutput("card_resumen_incendios")
+```
+
+### Row {height="20%"}
+
+```{r}
+#| label: card-correlacion-maxima
+#| title: "Correlación más fuerte"
+
+htmlOutput("card_correlacion_maxima")
+```
+
+## Column {width="80%"}
+
+### Row {height="50%"}
+
+```{r}
+#| label: salida-grafico-matriz-correlacion
+#| title: "Matriz de correlación entre variables"
+
+plotlyOutput("grafico_matriz_correlacion")
+```
+
+```{r}
+#| label: salida-grafico-interaccion-temp-precip
+#| title: "Interacción temperatura × precipitación"
+
+plotlyOutput("grafico_interaccion_temp_precip")
+```
+
+### Row {height="50%"}
+
+```{r}
+#| label: salida-grafico-tendencias-multiples
+#| title: "Tendencias normalizadas de todas las variables"
+
+plotlyOutput("grafico_tendencias_multiples")
+```
+
+```{r}
+#| label: salida-grafico-condiciones-riesgo
+#| title: "Clasificación de años por condiciones de riesgo"
+
+plotlyOutput("grafico_condiciones_riesgo")
+```
+
+```{r}
+#| label: servidor
+#| context: server
+
+# =============================================================================
+# FUNCIONES REACTIVAS BASE (existentes)
+# =============================================================================
+
+# Función reactiva para filtrar los datos de incendios
+# de acuerdo con los filtros especificados por el usuario
+filtrar_incendios <- reactive({
+  # Se inicia con los datos de incendios sin filtrar
+  incendios_filtrados <- incendios
+
+  # Filtrar por confianza mínima
+  incendios_filtrados <-
+    incendios_filtrados |>
+    filter(confidence >= input$confianza_minima)
+  
+  # Filtrar por rango de fechas
+  incendios_filtrados <- 
+    incendios_filtrados |>
+    filter(
+      acq_date >= input$fecha[1],
+      acq_date <= input$fecha[2]
+    )
+
+  # Filtrar por FRP
+  incendios_filtrados <-
+    incendios_filtrados |>
+    filter(frp >= input$frp[1] & frp <= input$frp[2])
+
+  # Filtrar por AC
+  if (input$ac != "Todas") {
+    incendios_filtrados <-
+      incendios_filtrados |>
+      filter(nombre_ac == input$ac)
+  }
+  
+  # Filtrar por ASP
+  if (input$asp != "Todas") {
+    incendios_filtrados <-
+      incendios_filtrados |>
+      filter(nombre_asp == input$asp)
+  }
+  
+  return(incendios_filtrados)
+})
+
+# Función reactiva para filtrar los datos de áreas de conservación
+# con estadísticas de incendios de acuerdo con los filtros especificados por el usuario
+filtrar_ac_incendios <- reactive({
+  incendios_filtrados <- filtrar_incendios()
+  
+  # Verificar si hay incendios en AC
+  incendios_en_ac <- incendios_filtrados |>
+    filter(!is.na(nombre_ac))
+  
+  if (nrow(incendios_en_ac) > 0) {
+    # Si hay incendios en AC, proceder normalmente
+    ac_incendios_filtradas <- 
+      ac |>
+      left_join(
+        st_drop_geometry(incendios_filtrados) |>
+          count(nombre_ac, name = "incendios_n"),
+        by = "nombre_ac"
+      ) |>
+      mutate(incendios_n = coalesce(incendios_n, 0L)) |>
+      filter(incendios_n > 0) |>
+      arrange(incendios_n)
+  } else {
+    # Si no hay incendios, devolver data frame vacío con estructura correcta
+    ac_incendios_filtradas <-
+      ac |>
+      slice(0) |>
+      mutate(incendios_n = integer())
+  }
+  
+  return(ac_incendios_filtradas)
+})
+
+# Función reactiva para filtrar los datos de ASP
+# con estadísticas de incendios de acuerdo con los filtros especificados por el usuario
+filtrar_asp_incendios <- reactive({
+  incendios_filtrados <- filtrar_incendios()
+  
+  # Verificar si hay incendios en ASP
+  incendios_en_asp <- incendios_filtrados |>
+    filter(!is.na(nombre_asp))
+  
+  if (nrow(incendios_en_asp) > 0) {
+    # Si hay incendios en ASP, proceder normalmente
+    asp_incendios_filtradas <- 
+      asp |>
+      left_join(
+        st_drop_geometry(incendios_filtrados) |>
+          count(nombre_asp, name = "incendios_n"),
+        by = "nombre_asp"
+      ) |>
+      mutate(incendios_n = coalesce(incendios_n, 0L)) |>
+      filter(incendios_n > 0) |>
+      arrange(incendios_n)
+  } else {
+    # Si no hay incendios, devolver data frame vacío
+    asp_incendios_filtradas <-
+      asp |>
+      slice(0) |>
+      mutate(incendios_n = integer())
+  }
+  
+  return(asp_incendios_filtradas)
+})
+
+# =============================================================================
+# NUEVA FUNCIÓN REACTIVA: Datos anuales para análisis climático
+# =============================================================================
+
+filtrar_datos_anuales <- reactive({
+  incendios_filtrados <- filtrar_incendios()
+  
+  # Agregar datos por año
+  datos_anuales <- incendios_filtrados |>
+    st_drop_geometry() |>
+    mutate(anio = year(acq_date)) |>
+    group_by(anio) |>
+    summarise(
+      n_incendios = n(),
+      temp_promedio = mean(TEMPERATURE_2M_ACQ_DATE_MEAN, na.rm = TRUE),
+      temp_max = max(TEMPERATURE_2M_ACQ_DATE_MEAN, na.rm = TRUE),
+      precip_promedio = mean(PRECIPITATION_ACQ_DATE_SUM, na.rm = TRUE),
+      precip_total = sum(PRECIPITATION_ACQ_DATE_SUM, na.rm = TRUE),
+      frp_promedio = mean(frp, na.rm = TRUE),
+      vel_viento_promedio = mean(X10M_WIND_SPEED_ACQ_DATE_MEAN, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    mutate(
+      # Calcular anomalías respecto al promedio histórico
+      temp_anomalia = temp_promedio - mean(temp_promedio, na.rm = TRUE),
+      precip_anomalia = precip_promedio - mean(precip_promedio, na.rm = TRUE),
+      # Definir período (para comparaciones)
+      periodo = if_else(anio <= 2012, "2001-2012", "2013-2024")
+    )
+  
+  return(datos_anuales)
+})
+
+# Función reactiva para calcular métricas climáticas
+calcular_metricas <- reactive({
+  datos <- filtrar_datos_anuales()
+  
+  # Verificar que hay suficientes datos
+  if (nrow(datos) < 3) {
+    return(list(
+      tendencia_temp = NA,
+      tendencia_incendios = NA,
+      correlacion = NA,
+      p_valor = NA,
+      cambio_pct = NA,
+      significativo = FALSE
+    ))
+  }
+  
+  # Modelos de tendencia
+  modelo_temp <- lm(temp_promedio ~ anio, data = datos)
+  modelo_incendios <- lm(n_incendios ~ anio, data = datos)
+  
+  # Correlación
+  cor_test <- cor.test(datos$temp_promedio, datos$n_incendios)
+  
+  # Cambio entre períodos
+  periodo1 <- datos |> filter(periodo == "2001-2012")
+  periodo2 <- datos |> filter(periodo == "2013-2024")
+  
+  prom1 <- if(nrow(periodo1) > 0) mean(periodo1$n_incendios, na.rm = TRUE) else NA
+  prom2 <- if(nrow(periodo2) > 0) mean(periodo2$n_incendios, na.rm = TRUE) else NA
+  cambio_pct <- if(!is.na(prom1) && !is.na(prom2) && prom1 > 0) {
+    ((prom2 - prom1) / prom1) * 100
+  } else {
+    NA
+  }
+  
+  list(
+    tendencia_temp = coef(modelo_temp)[2] * 10,  # °C por década
+    tendencia_incendios = coef(modelo_incendios)[2] * 10,  # incendios por década
+    correlacion = cor_test$estimate,
+    p_valor = cor_test$p.value,
+    cambio_pct = cambio_pct,
+    significativo = cor_test$p.value < 0.05
+  )
+})
+
+# Título dinámico según filtros
+titulo_area <- reactive({
+  if (input$asp != "Todas") {
+    input$asp
+  } else if (input$ac != "Todas") {
+    input$ac
+  } else {
+    "Costa Rica"
+  }
+})
+
+# =============================================================================
+# TARJETAS DE MÉTRICAS PARA ANÁLISIS CLIMÁTICO
+# =============================================================================
+
+# Función auxiliar para crear tarjeta HTML
+crear_tarjeta <- function(valor, color = "#dc3545", icono = "🌡️") {
+  sprintf(
+    '<div style="text-align: center; padding: 10px;">
+      <span style="font-size: 2em;">%s</span>
+      <div style="font-size: 1.8em; font-weight: bold; color: %s; margin-top: 5px;">%s</div>
+    </div>',
+    icono, color, valor
+  )
+}
+
+output$card_tendencia_temp <- renderUI({
+  metricas <- calcular_metricas()
+  
+  valor <- if(is.na(metricas$tendencia_temp)) {
+    "Sin datos"
+  } else {
+    sprintf("%+.2f °C/déc", metricas$tendencia_temp)
+  }
+  
+  color <- if(is.na(metricas$tendencia_temp) || metricas$tendencia_temp <= 0) "#6c757d" else "#dc3545"
+  
+  HTML(crear_tarjeta(valor, color, "🌡️"))
+})
+
+output$card_tendencia_incendios <- renderUI({
+  metricas <- calcular_metricas()
+  
+  valor <- if(is.na(metricas$tendencia_incendios)) {
+    "Sin datos"
+  } else {
+    sprintf("%+.0f /déc", metricas$tendencia_incendios)
+  }
+  
+  color <- if(is.na(metricas$tendencia_incendios) || metricas$tendencia_incendios <= 0) "#28a745" else "#dc3545"
+  
+  HTML(crear_tarjeta(valor, color, "🔥"))
+})
+
+output$card_correlacion <- renderUI({
+  metricas <- calcular_metricas()
+  
+  valor <- if(is.na(metricas$correlacion)) {
+    "Sin datos"
+  } else {
+    signif_text <- if(metricas$significativo) " *" else ""
+    sprintf("r = %.2f%s", metricas$correlacion, signif_text)
+  }
+  
+  color <- if(is.na(metricas$correlacion)) "#6c757d" else if(abs(metricas$correlacion) > 0.5) "#ffc107" else "#6c757d"
+  
+  HTML(crear_tarjeta(valor, color, "📈"))
+})
+
+output$card_cambio_periodo <- renderUI({
+  metricas <- calcular_metricas()
+  
+  valor <- if(is.na(metricas$cambio_pct)) {
+    "Sin datos"
+  } else {
+    sprintf("%+.1f%%", metricas$cambio_pct)
+  }
+  
+  color <- if(is.na(metricas$cambio_pct)) {
+    "#6c757d"
+  } else if(metricas$cambio_pct > 10) {
+    "#dc3545"
+  } else if(metricas$cambio_pct < -10) {
+    "#28a745"
+  } else {
+    "#ffc107"
+  }
+  
+  HTML(crear_tarjeta(valor, color, "↔️"))
+})
+
+# =============================================================================
+# GRÁFICOS PARA ANÁLISIS CLIMÁTICO
+# =============================================================================
+
+# Gráfico de tendencias duales (temperatura + incendios)
+output$grafico_tendencias_duales <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  titulo <- titulo_area()
+  
+  # Verificar datos suficientes
+  if (nrow(datos) < 2) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes para mostrar tendencias",
+          annotations = list(
+            list(
+              text = "Seleccione un rango de fechas más amplio",
+              x = 0.5, y = 0.5,
+              xref = "paper", yref = "paper",
+              showarrow = FALSE, font = list(size = 14)
+            )
+          )
+        )
+    )
+  }
+  
+  # Calcular tendencias lineales
+  modelo_temp <- lm(temp_promedio ~ anio, data = datos)
+  modelo_incendios <- lm(n_incendios ~ anio, data = datos)
+  
+  # Coeficientes para mostrar
+  tendencia_temp <- coef(modelo_temp)[2] * 10  # cambio por década
+  tendencia_incendios <- coef(modelo_incendios)[2] * 10
+  
+  # Predicciones para líneas de tendencia
+  datos$pred_temp <- predict(modelo_temp)
+  datos$pred_inc <- predict(modelo_incendios)
+  
+  # Gráfico con plotly
+ fig <- plot_ly(datos) |>
+    # Línea de temperatura
+    add_trace(
+      x = ~anio, 
+      y = ~temp_promedio,
+      type = "scatter", 
+      mode = "lines+markers",
+      name = "Temperatura (°C)",
+      line = list(color = "#e74c3c", width = 2),
+      marker = list(size = 8, color = "#e74c3c"),
+      yaxis = "y1",
+      hovertemplate = paste0(
+        "<b>%{x}</b><br>",
+        "Temperatura: %{y:.1f}°C",
+        "<extra></extra>"
+      )
+    ) |>
+    # Línea de tendencia temperatura
+    add_trace(
+      x = ~anio,
+      y = ~pred_temp,
+      type = "scatter",
+      mode = "lines",
+      name = sprintf("Tendencia temp (%+.2f°C/década)", tendencia_temp),
+      line = list(color = "#e74c3c", width = 1.5, dash = "dash"),
+      yaxis = "y1",
+      hoverinfo = "skip"
+    ) |>
+    # Línea de incendios
+    add_trace(
+      x = ~anio, 
+      y = ~n_incendios,
+      type = "scatter", 
+      mode = "lines+markers",
+      name = "Cantidad de incendios",
+      line = list(color = "#3498db", width = 2),
+      marker = list(size = 8, color = "#3498db"),
+      yaxis = "y2",
+      hovertemplate = paste0(
+        "<b>%{x}</b><br>",
+        "Incendios: %{y:,.0f}",
+        "<extra></extra>"
+      )
+    ) |>
+    # Línea de tendencia incendios
+    add_trace(
+      x = ~anio,
+      y = ~pred_inc,
+      type = "scatter",
+      mode = "lines",
+      name = sprintf("Tendencia incendios (%+.0f/década)", tendencia_incendios),
+      line = list(color = "#3498db", width = 1.5, dash = "dash"),
+      yaxis = "y2",
+      hoverinfo = "skip"
+    ) |>
+    layout(
+      title = list(
+        text = paste("Tendencias de temperatura e incendios -", titulo),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "Año", dtick = 2),
+      yaxis = list(
+        title = "Temperatura promedio (°C)",
+        titlefont = list(color = "#e74c3c"),
+        tickfont = list(color = "#e74c3c"),
+        side = "left"
+      ),
+      yaxis2 = list(
+        title = "Cantidad de incendios",
+        titlefont = list(color = "#3498db"),
+        tickfont = list(color = "#3498db"),
+        overlaying = "y",
+        side = "right",
+        tickformat = ",.0f"
+      ),
+      legend = list(
+        orientation = "h",
+        y = -0.2,
+        x = 0.5,
+        xanchor = "center"
+      ),
+      hovermode = "x unified",
+      margin = list(t = 50, r = 80, b = 80, l = 80)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico de correlación (scatter plot)
+output$grafico_correlacion <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  titulo <- titulo_area()
+  
+  # Verificar datos suficientes
+  if (nrow(datos) < 3) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes para análisis de correlación",
+          annotations = list(
+            list(
+              text = "Se requieren al menos 3 años de datos",
+              x = 0.5, y = 0.5,
+              xref = "paper", yref = "paper",
+              showarrow = FALSE, font = list(size = 14)
+            )
+          )
+        )
+    )
+  }
+  
+  # Calcular correlación
+  cor_test <- cor.test(datos$temp_promedio, datos$n_incendios)
+  r <- cor_test$estimate
+  p_valor <- cor_test$p.value
+  
+  # Modelo lineal
+  modelo <- lm(n_incendios ~ temp_promedio, data = datos)
+  datos$pred <- predict(modelo)
+  
+  # Texto de significancia
+  signif_text <- if(p_valor < 0.001) {
+    "***"
+  } else if(p_valor < 0.01) {
+    "**"
+  } else if(p_valor < 0.05) {
+    "*"
+  } else {
+    ""
+  }
+  
+  # Escala de color por año
+  fig <- plot_ly(datos) |>
+    add_trace(
+      x = ~temp_promedio,
+      y = ~n_incendios,
+      type = "scatter",
+      mode = "markers",
+      marker = list(
+        size = 14,
+        color = ~anio,
+        colorscale = "Viridis",
+        showscale = TRUE,
+        colorbar = list(title = "Año", tickformat = "d")
+      ),
+      text = ~anio,
+      hovertemplate = paste0(
+        "<b>Año: %{text}</b><br>",
+        "Temperatura: %{x:.1f}°C<br>",
+        "Incendios: %{y:,.0f}",
+        "<extra></extra>"
+      )
+    ) |>
+    # Línea de regresión
+    add_trace(
+      x = ~temp_promedio,
+      y = ~pred,
+      type = "scatter",
+      mode = "lines",
+      name = "Regresión lineal",
+      line = list(color = "red", width = 2),
+      hoverinfo = "skip"
+    ) |>
+    layout(
+      title = list(
+        text = paste0(
+          titulo, "<br>",
+          "<sup>r = ", sprintf("%.3f", r), signif_text,
+          " (p = ", sprintf("%.4f", p_valor), ")</sup>"
+        ),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "Temperatura promedio (°C)"),
+      yaxis = list(title = "Cantidad de incendios", tickformat = ",.0f"),
+      showlegend = FALSE,
+      annotations = list(
+        list(
+          x = 1, y = 0,
+          text = "* p<0.05, ** p<0.01, *** p<0.001",
+          showarrow = FALSE,
+          xref = "paper", yref = "paper",
+          xanchor = "right", yanchor = "bottom",
+          font = list(size = 10, color = "gray")
+        )
+      ),
+      margin = list(t = 70, r = 50, b = 60, l = 70)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico de comparación de períodos
+output$grafico_comparacion_periodos <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  
+  # Verificar datos en ambos períodos
+  periodo1 <- datos |> filter(periodo == "2001-2012")
+  periodo2 <- datos |> filter(periodo == "2013-2024")
+  
+  if (nrow(periodo1) == 0 || nrow(periodo2) == 0) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Se requieren datos en ambos períodos",
+          annotations = list(
+            list(
+              text = "Ajuste el rango de fechas para incluir ambos períodos",
+              x = 0.5, y = 0.5,
+              xref = "paper", yref = "paper",
+              showarrow = FALSE, font = list(size = 14)
+            )
+          )
+        )
+    )
+  }
+  
+  # Agregar por período para múltiples variables
+  resumen <- datos |>
+    group_by(periodo) |>
+    summarise(
+      incendios_prom = mean(n_incendios, na.rm = TRUE),
+      incendios_sd = sd(n_incendios, na.rm = TRUE),
+      temp_prom = mean(temp_promedio, na.rm = TRUE),
+      temp_sd = sd(temp_promedio, na.rm = TRUE),
+      n = n(),
+      .groups = "drop"
+    ) |>
+    mutate(
+      incendios_error = qt(0.975, n - 1) * incendios_sd / sqrt(n),
+      temp_error = qt(0.975, n - 1) * temp_sd / sqrt(n)
+    )
+  
+  # Calcular cambios porcentuales
+  cambio_inc <- ((resumen$incendios_prom[2] - resumen$incendios_prom[1]) / 
+                   resumen$incendios_prom[1]) * 100
+  cambio_temp <- resumen$temp_prom[2] - resumen$temp_prom[1]
+  
+  # Crear subplots
+  fig <- subplot(
+    # Subplot 1: Incendios
+    plot_ly(resumen) |>
+      add_trace(
+        x = ~periodo,
+        y = ~incendios_prom,
+        type = "bar",
+        name = "Incendios",
+        marker = list(color = c("#3498db", "#e74c3c")),
+        error_y = list(type = "data", array = ~incendios_error, color = "black"),
+        hovertemplate = paste0(
+          "<b>%{x}</b><br>",
+          "Promedio: %{y:.0f} incendios/año",
+          "<extra></extra>"
+        )
+      ) |>
+      layout(
+        yaxis = list(title = "Incendios promedio/año"),
+        annotations = list(
+          list(
+            x = 0.5, y = 1.05,
+            text = sprintf("Cambio: %+.1f%%", cambio_inc),
+            showarrow = FALSE,
+            xref = "paper", yref = "paper",
+            font = list(size = 12, color = if(cambio_inc > 0) "red" else "green")
+          )
+        )
+      ),
+    # Subplot 2: Temperatura
+    plot_ly(resumen) |>
+      add_trace(
+        x = ~periodo,
+        y = ~temp_prom,
+        type = "bar",
+        name = "Temperatura",
+        marker = list(color = c("#f39c12", "#e74c3c")),
+        error_y = list(type = "data", array = ~temp_error, color = "black"),
+        hovertemplate = paste0(
+          "<b>%{x}</b><br>",
+          "Temperatura: %{y:.1f}°C",
+          "<extra></extra>"
+        )
+      ) |>
+      layout(
+        yaxis = list(title = "Temperatura promedio (°C)"),
+        annotations = list(
+          list(
+            x = 0.5, y = 1.05,
+            text = sprintf("Cambio: %+.2f°C", cambio_temp),
+            showarrow = FALSE,
+            xref = "paper", yref = "paper",
+            font = list(size = 12, color = if(cambio_temp > 0) "red" else "blue")
+          )
+        )
+      ),
+    nrows = 1,
+    shareX = TRUE,
+    titleX = FALSE
+  ) |>
+    layout(
+      title = list(
+        text = "Comparación entre períodos",
+        font = list(size = 14)
+      ),
+      showlegend = FALSE,
+      margin = list(t = 70, b = 50)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico de anomalías de temperatura
+output$grafico_anomalias <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  titulo <- titulo_area()
+  
+  if (nrow(datos) < 2) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes",
+          annotations = list(
+            list(
+              text = "Seleccione un rango de fechas más amplio",
+              x = 0.5, y = 0.5,
+              xref = "paper", yref = "paper",
+              showarrow = FALSE, font = list(size = 14)
+            )
+          )
+        )
+    )
+  }
+  
+  # Escalar incendios para visualización en el mismo eje
+  rango_anomalia <- range(datos$temp_anomalia, na.rm = TRUE)
+  datos <- datos |>
+    mutate(
+      incendios_escalados = scales::rescale(
+        n_incendios, 
+        to = c(rango_anomalia[1] * 0.8, rango_anomalia[2] * 0.8)
+      )
+    )
+  
+  fig <- plot_ly(datos) |>
+    # Barras de anomalía de temperatura
+    add_trace(
+      x = ~anio,
+      y = ~temp_anomalia,
+      type = "bar",
+      name = "Anomalía de temperatura",
+      marker = list(
+        color = ~ifelse(temp_anomalia > 0, "#e74c3c", "#3498db")
+      ),
+      hovertemplate = paste0(
+        "<b>%{x}</b><br>",
+        "Anomalía: %{y:+.2f}°C",
+        "<extra></extra>"
+      )
+    ) |>
+    # Puntos de incendios
+    add_trace(
+      x = ~anio,
+      y = ~incendios_escalados,
+      type = "scatter",
+      mode = "markers",
+      name = "Incendios (escalados)",
+      marker = list(
+        size = ~scales::rescale(n_incendios, to = c(8, 20)),
+        color = "black",
+        symbol = "diamond",
+        line = list(color = "white", width = 1)
+      ),
+      customdata = ~n_incendios,
+      hovertemplate = paste0(
+        "<b>%{x}</b><br>",
+        "Incendios: %{customdata:,.0f}",
+        "<extra></extra>"
+      )
+    ) |>
+    layout(
+      title = list(
+        text = paste("Anomalías de temperatura -", titulo),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "Año", dtick = 2),
+      yaxis = list(
+        title = "Anomalía de temperatura (°C)",
+        zeroline = TRUE,
+        zerolinecolor = "black",
+        zerolinewidth = 1.5
+      ),
+      legend = list(orientation = "h", y = -0.15, x = 0.5, xanchor = "center"),
+      barmode = "relative",
+      margin = list(t = 50, b = 70)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# =============================================================================
+# TARJETAS Y GRÁFICOS PARA ANÁLISIS DE PRECIPITACIÓN
+# =============================================================================
+
+# Función reactiva para calcular métricas de precipitación
+calcular_metricas_precip <- reactive({
+  datos <- filtrar_datos_anuales()
+  
+  # Verificar que hay suficientes datos
+  if (nrow(datos) < 3) {
+    return(list(
+      tendencia_precip = NA,
+      tendencia_incendios = NA,
+      correlacion = NA,
+      p_valor = NA,
+      cambio_pct = NA,
+      significativo = FALSE
+    ))
+  }
+  
+  # Modelos de tendencia
+  modelo_precip <- lm(precip_promedio ~ anio, data = datos)
+  modelo_incendios <- lm(n_incendios ~ anio, data = datos)
+  
+  # Correlación
+  cor_test <- cor.test(datos$precip_promedio, datos$n_incendios)
+  
+  # Cambio entre períodos
+  periodo1 <- datos |> filter(periodo == "2001-2012")
+  periodo2 <- datos |> filter(periodo == "2013-2024")
+  
+  prom1 <- if(nrow(periodo1) > 0) mean(periodo1$n_incendios, na.rm = TRUE) else NA
+  prom2 <- if(nrow(periodo2) > 0) mean(periodo2$n_incendios, na.rm = TRUE) else NA
+  cambio_pct <- if(!is.na(prom1) && !is.na(prom2) && prom1 > 0) {
+    ((prom2 - prom1) / prom1) * 100
+  } else {
+    NA
+  }
+  
+  list(
+    tendencia_precip = coef(modelo_precip)[2] * 10,  # mm por década
+    tendencia_incendios = coef(modelo_incendios)[2] * 10,
+    correlacion = cor_test$estimate,
+    p_valor = cor_test$p.value,
+    cambio_pct = cambio_pct,
+    significativo = cor_test$p.value < 0.05
+  )
+})
+
+# Tarjetas de métricas para precipitación
+output$card_tendencia_precip <- renderUI({
+  metricas <- calcular_metricas_precip()
+  
+  valor <- if(is.na(metricas$tendencia_precip)) {
+    "Sin datos"
+  } else {
+    sprintf("%+.2f mm/déc", metricas$tendencia_precip)
+  }
+  
+  # Menos precipitación = preocupante (rojo), más = favorable (azul)
+  color <- if(is.na(metricas$tendencia_precip)) {
+    "#6c757d"
+  } else if(metricas$tendencia_precip < 0) {
+    "#dc3545"  # Rojo - menos lluvia es preocupante
+  } else {
+    "#17a2b8"  # Azul - más lluvia
+  }
+  
+  HTML(crear_tarjeta(valor, color, "🌧️"))
+})
+
+output$card_tendencia_incendios_precip <- renderUI({
+  metricas <- calcular_metricas_precip()
+  
+  valor <- if(is.na(metricas$tendencia_incendios)) {
+    "Sin datos"
+  } else {
+    sprintf("%+.0f /déc", metricas$tendencia_incendios)
+  }
+  
+  color <- if(is.na(metricas$tendencia_incendios) || metricas$tendencia_incendios <= 0) "#28a745" else "#dc3545"
+  
+  HTML(crear_tarjeta(valor, color, "🔥"))
+})
+
+output$card_correlacion_precip <- renderUI({
+  metricas <- calcular_metricas_precip()
+  
+  valor <- if(is.na(metricas$correlacion)) {
+    "Sin datos"
+  } else {
+    signif_text <- if(metricas$significativo) " *" else ""
+    sprintf("r = %.2f%s", metricas$correlacion, signif_text)
+  }
+  
+  color <- if(is.na(metricas$correlacion)) "#6c757d" else if(abs(metricas$correlacion) > 0.5) "#ffc107" else "#6c757d"
+  
+  HTML(crear_tarjeta(valor, color, "📈"))
+})
+
+output$card_cambio_periodo_precip <- renderUI({
+  metricas <- calcular_metricas_precip()
+  
+  valor <- if(is.na(metricas$cambio_pct)) {
+    "Sin datos"
+  } else {
+    sprintf("%+.1f%%", metricas$cambio_pct)
+  }
+  
+  color <- if(is.na(metricas$cambio_pct)) {
+    "#6c757d"
+  } else if(metricas$cambio_pct > 10) {
+    "#dc3545"
+  } else if(metricas$cambio_pct < -10) {
+    "#28a745"
+  } else {
+    "#ffc107"
+  }
+  
+  HTML(crear_tarjeta(valor, color, "↔️"))
+})
+
+# Gráfico de tendencias duales (precipitación + incendios)
+output$grafico_tendencias_precip <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  titulo <- titulo_area()
+  
+  if (nrow(datos) < 2) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes para mostrar tendencias",
+          annotations = list(list(
+            text = "Seleccione un rango de fechas más amplio",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  # Calcular tendencias lineales
+  modelo_precip <- lm(precip_promedio ~ anio, data = datos)
+  modelo_incendios <- lm(n_incendios ~ anio, data = datos)
+  
+  tendencia_precip <- coef(modelo_precip)[2] * 10
+  tendencia_incendios <- coef(modelo_incendios)[2] * 10
+  
+  datos$pred_precip <- predict(modelo_precip)
+  datos$pred_inc <- predict(modelo_incendios)
+  
+  fig <- plot_ly(datos) |>
+    add_trace(
+      x = ~anio, y = ~precip_promedio,
+      type = "scatter", mode = "lines+markers",
+      name = "Precipitación (mm)",
+      line = list(color = "#17a2b8", width = 2),
+      marker = list(size = 8, color = "#17a2b8"),
+      yaxis = "y1",
+      hovertemplate = "<b>%{x}</b><br>Precipitación: %{y:.2f} mm<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~anio, y = ~pred_precip,
+      type = "scatter", mode = "lines",
+      name = sprintf("Tendencia precip (%+.2f mm/década)", tendencia_precip),
+      line = list(color = "#17a2b8", width = 1.5, dash = "dash"),
+      yaxis = "y1", hoverinfo = "skip"
+    ) |>
+    add_trace(
+      x = ~anio, y = ~n_incendios,
+      type = "scatter", mode = "lines+markers",
+      name = "Cantidad de incendios",
+      line = list(color = "#fd7e14", width = 2),
+      marker = list(size = 8, color = "#fd7e14"),
+      yaxis = "y2",
+      hovertemplate = "<b>%{x}</b><br>Incendios: %{y:,.0f}<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~anio, y = ~pred_inc,
+      type = "scatter", mode = "lines",
+      name = sprintf("Tendencia incendios (%+.0f/década)", tendencia_incendios),
+      line = list(color = "#fd7e14", width = 1.5, dash = "dash"),
+      yaxis = "y2", hoverinfo = "skip"
+    ) |>
+    layout(
+      title = list(
+        text = paste("Tendencias de precipitación e incendios -", titulo),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "Año", dtick = 2),
+      yaxis = list(
+        title = "Precipitación promedio (mm)",
+        titlefont = list(color = "#17a2b8"),
+        tickfont = list(color = "#17a2b8"),
+        side = "left"
+      ),
+      yaxis2 = list(
+        title = "Cantidad de incendios",
+        titlefont = list(color = "#fd7e14"),
+        tickfont = list(color = "#fd7e14"),
+        overlaying = "y",
+        side = "right",
+        tickformat = ",.0f"
+      ),
+      legend = list(orientation = "h", y = -0.2, x = 0.5, xanchor = "center"),
+      hovermode = "x unified",
+      margin = list(t = 50, r = 80, b = 80, l = 80)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico de correlación precipitación-incendios
+output$grafico_correlacion_precip <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  titulo <- titulo_area()
+  
+  if (nrow(datos) < 3) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes para análisis de correlación",
+          annotations = list(list(
+            text = "Se requieren al menos 3 años de datos",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  cor_test <- cor.test(datos$precip_promedio, datos$n_incendios)
+  r <- cor_test$estimate
+  p_valor <- cor_test$p.value
+  
+  modelo <- lm(n_incendios ~ precip_promedio, data = datos)
+  datos$pred <- predict(modelo)
+  
+  signif_text <- if(p_valor < 0.001) "***" else if(p_valor < 0.01) "**" else if(p_valor < 0.05) "*" else ""
+  
+  fig <- plot_ly(datos) |>
+    add_trace(
+      x = ~precip_promedio, y = ~n_incendios,
+      type = "scatter", mode = "markers",
+      marker = list(
+        size = 14, color = ~anio,
+        colorscale = "Viridis", showscale = TRUE,
+        colorbar = list(title = "Año", tickformat = "d")
+      ),
+      text = ~anio,
+      hovertemplate = "<b>Año: %{text}</b><br>Precipitación: %{x:.2f} mm<br>Incendios: %{y:,.0f}<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~precip_promedio, y = ~pred,
+      type = "scatter", mode = "lines",
+      name = "Regresión lineal",
+      line = list(color = "#17a2b8", width = 2),
+      hoverinfo = "skip"
+    ) |>
+    layout(
+      title = list(
+        text = paste0(titulo, "<br><sup>r = ", sprintf("%.3f", r), signif_text, " (p = ", sprintf("%.4f", p_valor), ")</sup>"),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "Precipitación promedio (mm)"),
+      yaxis = list(title = "Cantidad de incendios", tickformat = ",.0f"),
+      showlegend = FALSE,
+      annotations = list(list(
+        x = 1, y = 0,
+        text = "* p<0.05, ** p<0.01, *** p<0.001",
+        showarrow = FALSE, xref = "paper", yref = "paper",
+        xanchor = "right", yanchor = "bottom",
+        font = list(size = 10, color = "gray")
+      )),
+      margin = list(t = 70, r = 50, b = 60, l = 70)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico de comparación de períodos para precipitación
+output$grafico_comparacion_periodos_precip <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  
+  periodo1 <- datos |> filter(periodo == "2001-2012")
+  periodo2 <- datos |> filter(periodo == "2013-2024")
+  
+  if (nrow(periodo1) == 0 || nrow(periodo2) == 0) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Se requieren datos en ambos períodos",
+          annotations = list(list(
+            text = "Ajuste el rango de fechas para incluir ambos períodos",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  resumen <- datos |>
+    group_by(periodo) |>
+    summarise(
+      incendios_prom = mean(n_incendios, na.rm = TRUE),
+      incendios_sd = sd(n_incendios, na.rm = TRUE),
+      precip_prom = mean(precip_promedio, na.rm = TRUE),
+      precip_sd = sd(precip_promedio, na.rm = TRUE),
+      n = n(),
+      .groups = "drop"
+    ) |>
+    mutate(
+      incendios_error = qt(0.975, n - 1) * incendios_sd / sqrt(n),
+      precip_error = qt(0.975, n - 1) * precip_sd / sqrt(n)
+    )
+  
+  cambio_inc <- ((resumen$incendios_prom[2] - resumen$incendios_prom[1]) / resumen$incendios_prom[1]) * 100
+  cambio_precip <- ((resumen$precip_prom[2] - resumen$precip_prom[1]) / resumen$precip_prom[1]) * 100
+  
+  fig <- subplot(
+    plot_ly(resumen) |>
+      add_trace(
+        x = ~periodo, y = ~incendios_prom,
+        type = "bar", name = "Incendios",
+        marker = list(color = c("#3498db", "#e74c3c")),
+        error_y = list(type = "data", array = ~incendios_error, color = "black"),
+        hovertemplate = "<b>%{x}</b><br>Promedio: %{y:.0f} incendios/año<extra></extra>"
+      ) |>
+      layout(
+        yaxis = list(title = "Incendios promedio/año"),
+        annotations = list(list(
+          x = 0.5, y = 1.05,
+          text = sprintf("Cambio: %+.1f%%", cambio_inc),
+          showarrow = FALSE, xref = "paper", yref = "paper",
+          font = list(size = 12, color = if(cambio_inc > 0) "red" else "green")
+        ))
+      ),
+    plot_ly(resumen) |>
+      add_trace(
+        x = ~periodo, y = ~precip_prom,
+        type = "bar", name = "Precipitación",
+        marker = list(color = c("#17a2b8", "#0d6efd")),
+        error_y = list(type = "data", array = ~precip_error, color = "black"),
+        hovertemplate = "<b>%{x}</b><br>Precipitación: %{y:.2f} mm<extra></extra>"
+      ) |>
+      layout(
+        yaxis = list(title = "Precipitación promedio (mm)"),
+        annotations = list(list(
+          x = 0.5, y = 1.05,
+          text = sprintf("Cambio: %+.1f%%", cambio_precip),
+          showarrow = FALSE, xref = "paper", yref = "paper",
+          font = list(size = 12, color = if(cambio_precip < 0) "red" else "blue")
+        ))
+      ),
+    nrows = 1, shareX = TRUE, titleX = FALSE
+  ) |>
+    layout(
+      title = list(text = "Comparación entre períodos", font = list(size = 14)),
+      showlegend = FALSE,
+      margin = list(t = 70, b = 50)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico de anomalías de precipitación
+output$grafico_anomalias_precip <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  titulo <- titulo_area()
+  
+  if (nrow(datos) < 2) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes",
+          annotations = list(list(
+            text = "Seleccione un rango de fechas más amplio",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  rango_anomalia <- range(datos$precip_anomalia, na.rm = TRUE)
+  datos <- datos |>
+    mutate(
+      incendios_escalados = scales::rescale(
+        n_incendios, 
+        to = c(rango_anomalia[1] * 0.8, rango_anomalia[2] * 0.8)
+      )
+    )
+  
+  fig <- plot_ly(datos) |>
+    add_trace(
+      x = ~anio, y = ~precip_anomalia,
+      type = "bar",
+      name = "Anomalía de precipitación",
+      marker = list(
+        # Más lluvia = azul (positivo), menos lluvia = rojo (negativo/preocupante)
+        color = ~ifelse(precip_anomalia > 0, "#17a2b8", "#dc3545")
+      ),
+      hovertemplate = "<b>%{x}</b><br>Anomalía: %{y:+.2f} mm<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~anio, y = ~incendios_escalados,
+      type = "scatter", mode = "markers",
+      name = "Incendios (escalados)",
+      marker = list(
+        size = ~scales::rescale(n_incendios, to = c(8, 20)),
+        color = "black", symbol = "diamond",
+        line = list(color = "white", width = 1)
+      ),
+      customdata = ~n_incendios,
+      hovertemplate = "<b>%{x}</b><br>Incendios: %{customdata:,.0f}<extra></extra>"
+    ) |>
+    layout(
+      title = list(
+        text = paste("Anomalías de precipitación -", titulo),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "Año", dtick = 2),
+      yaxis = list(
+        title = "Anomalía de precipitación (mm)",
+        zeroline = TRUE,
+        zerolinecolor = "black",
+        zerolinewidth = 1.5
+      ),
+      legend = list(orientation = "h", y = -0.15, x = 0.5, xanchor = "center"),
+      barmode = "relative",
+      margin = list(t = 50, b = 70)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# =============================================================================
+# TARJETAS Y GRÁFICOS PARA ANÁLISIS DE VELOCIDAD DEL VIENTO
+# =============================================================================
+
+# Función reactiva para calcular métricas de viento
+calcular_metricas_viento <- reactive({
+  datos <- filtrar_datos_anuales()
+  
+  if (nrow(datos) < 3) {
+    return(list(
+      tendencia_viento = NA,
+      tendencia_incendios = NA,
+      correlacion = NA,
+      p_valor = NA,
+      cambio_pct = NA,
+      significativo = FALSE
+    ))
+  }
+  
+  # Modelos de tendencia
+  modelo_viento <- lm(vel_viento_promedio ~ anio, data = datos)
+  modelo_incendios <- lm(n_incendios ~ anio, data = datos)
+  
+  # Correlación
+  cor_test <- cor.test(datos$vel_viento_promedio, datos$n_incendios)
+  
+  # Cambio entre períodos
+  periodo1 <- datos |> filter(periodo == "2001-2012")
+  periodo2 <- datos |> filter(periodo == "2013-2024")
+  
+  prom1 <- if(nrow(periodo1) > 0) mean(periodo1$n_incendios, na.rm = TRUE) else NA
+  prom2 <- if(nrow(periodo2) > 0) mean(periodo2$n_incendios, na.rm = TRUE) else NA
+  cambio_pct <- if(!is.na(prom1) && !is.na(prom2) && prom1 > 0) {
+    ((prom2 - prom1) / prom1) * 100
+  } else {
+    NA
+  }
+  
+  list(
+    tendencia_viento = coef(modelo_viento)[2] * 10,  # m/s por década
+    tendencia_incendios = coef(modelo_incendios)[2] * 10,
+    correlacion = cor_test$estimate,
+    p_valor = cor_test$p.value,
+    cambio_pct = cambio_pct,
+    significativo = cor_test$p.value < 0.05
+  )
+})
+
+# Tarjetas de métricas para viento
+output$card_tendencia_viento <- renderUI({
+  metricas <- calcular_metricas_viento()
+  
+  valor <- if(is.na(metricas$tendencia_viento)) {
+    "Sin datos"
+  } else {
+    sprintf("%+.2f m/s/déc", metricas$tendencia_viento)
+  }
+  
+  # Más viento = preocupante (puede propagar incendios)
+  color <- if(is.na(metricas$tendencia_viento)) {
+    "#6c757d"
+  } else if(metricas$tendencia_viento > 0) {
+    "#fd7e14"  # Naranja - más viento puede ser preocupante
+  } else {
+    "#28a745"  # Verde - menos viento
+  }
+  
+  HTML(crear_tarjeta(valor, color, "💨"))
+})
+
+output$card_tendencia_incendios_viento <- renderUI({
+  metricas <- calcular_metricas_viento()
+  
+  valor <- if(is.na(metricas$tendencia_incendios)) {
+    "Sin datos"
+  } else {
+    sprintf("%+.0f /déc", metricas$tendencia_incendios)
+  }
+  
+  color <- if(is.na(metricas$tendencia_incendios) || metricas$tendencia_incendios <= 0) "#28a745" else "#dc3545"
+  
+  HTML(crear_tarjeta(valor, color, "🔥"))
+})
+
+output$card_correlacion_viento <- renderUI({
+  metricas <- calcular_metricas_viento()
+  
+  valor <- if(is.na(metricas$correlacion)) {
+    "Sin datos"
+  } else {
+    signif_text <- if(metricas$significativo) " *" else ""
+    sprintf("r = %.2f%s", metricas$correlacion, signif_text)
+  }
+  
+  color <- if(is.na(metricas$correlacion)) "#6c757d" else if(abs(metricas$correlacion) > 0.5) "#ffc107" else "#6c757d"
+  
+  HTML(crear_tarjeta(valor, color, "📈"))
+})
+
+output$card_cambio_periodo_viento <- renderUI({
+  metricas <- calcular_metricas_viento()
+  
+  valor <- if(is.na(metricas$cambio_pct)) {
+    "Sin datos"
+  } else {
+    sprintf("%+.1f%%", metricas$cambio_pct)
+  }
+  
+  color <- if(is.na(metricas$cambio_pct)) {
+    "#6c757d"
+  } else if(metricas$cambio_pct > 10) {
+    "#dc3545"
+  } else if(metricas$cambio_pct < -10) {
+    "#28a745"
+  } else {
+    "#ffc107"
+  }
+  
+  HTML(crear_tarjeta(valor, color, "↔️"))
+})
+
+# Gráfico de tendencias duales (viento + incendios)
+output$grafico_tendencias_viento <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  titulo <- titulo_area()
+  
+  if (nrow(datos) < 2) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes para mostrar tendencias",
+          annotations = list(list(
+            text = "Seleccione un rango de fechas más amplio",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  modelo_viento <- lm(vel_viento_promedio ~ anio, data = datos)
+  modelo_incendios <- lm(n_incendios ~ anio, data = datos)
+  
+  tendencia_viento <- coef(modelo_viento)[2] * 10
+  tendencia_incendios <- coef(modelo_incendios)[2] * 10
+  
+  datos$pred_viento <- predict(modelo_viento)
+  datos$pred_inc <- predict(modelo_incendios)
+  
+  fig <- plot_ly(datos) |>
+    add_trace(
+      x = ~anio, y = ~vel_viento_promedio,
+      type = "scatter", mode = "lines+markers",
+      name = "Velocidad del viento (m/s)",
+      line = list(color = "#6f42c1", width = 2),
+      marker = list(size = 8, color = "#6f42c1"),
+      yaxis = "y1",
+      hovertemplate = "<b>%{x}</b><br>Viento: %{y:.2f} m/s<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~anio, y = ~pred_viento,
+      type = "scatter", mode = "lines",
+      name = sprintf("Tendencia viento (%+.2f m/s/década)", tendencia_viento),
+      line = list(color = "#6f42c1", width = 1.5, dash = "dash"),
+      yaxis = "y1", hoverinfo = "skip"
+    ) |>
+    add_trace(
+      x = ~anio, y = ~n_incendios,
+      type = "scatter", mode = "lines+markers",
+      name = "Cantidad de incendios",
+      line = list(color = "#fd7e14", width = 2),
+      marker = list(size = 8, color = "#fd7e14"),
+      yaxis = "y2",
+      hovertemplate = "<b>%{x}</b><br>Incendios: %{y:,.0f}<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~anio, y = ~pred_inc,
+      type = "scatter", mode = "lines",
+      name = sprintf("Tendencia incendios (%+.0f/década)", tendencia_incendios),
+      line = list(color = "#fd7e14", width = 1.5, dash = "dash"),
+      yaxis = "y2", hoverinfo = "skip"
+    ) |>
+    layout(
+      title = list(
+        text = paste("Tendencias de velocidad del viento e incendios -", titulo),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "Año", dtick = 2),
+      yaxis = list(
+        title = "Velocidad del viento (m/s)",
+        titlefont = list(color = "#6f42c1"),
+        tickfont = list(color = "#6f42c1"),
+        side = "left"
+      ),
+      yaxis2 = list(
+        title = "Cantidad de incendios",
+        titlefont = list(color = "#fd7e14"),
+        tickfont = list(color = "#fd7e14"),
+        overlaying = "y",
+        side = "right",
+        tickformat = ",.0f"
+      ),
+      legend = list(orientation = "h", y = -0.2, x = 0.5, xanchor = "center"),
+      hovermode = "x unified",
+      margin = list(t = 50, r = 80, b = 80, l = 80)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico de correlación viento-incendios
+output$grafico_correlacion_viento <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  titulo <- titulo_area()
+  
+  if (nrow(datos) < 3) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes para análisis de correlación",
+          annotations = list(list(
+            text = "Se requieren al menos 3 años de datos",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  cor_test <- cor.test(datos$vel_viento_promedio, datos$n_incendios)
+  r <- cor_test$estimate
+  p_valor <- cor_test$p.value
+  
+  modelo <- lm(n_incendios ~ vel_viento_promedio, data = datos)
+  datos$pred <- predict(modelo)
+  
+  signif_text <- if(p_valor < 0.001) "***" else if(p_valor < 0.01) "**" else if(p_valor < 0.05) "*" else ""
+  
+  fig <- plot_ly(datos) |>
+    add_trace(
+      x = ~vel_viento_promedio, y = ~n_incendios,
+      type = "scatter", mode = "markers",
+      marker = list(
+        size = 14, color = ~anio,
+        colorscale = "Viridis", showscale = TRUE,
+        colorbar = list(title = "Año", tickformat = "d")
+      ),
+      text = ~anio,
+      hovertemplate = "<b>Año: %{text}</b><br>Viento: %{x:.2f} m/s<br>Incendios: %{y:,.0f}<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~vel_viento_promedio, y = ~pred,
+      type = "scatter", mode = "lines",
+      name = "Regresión lineal",
+      line = list(color = "#6f42c1", width = 2),
+      hoverinfo = "skip"
+    ) |>
+    layout(
+      title = list(
+        text = paste0(titulo, "<br><sup>r = ", sprintf("%.3f", r), signif_text, " (p = ", sprintf("%.4f", p_valor), ")</sup>"),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "Velocidad del viento (m/s)"),
+      yaxis = list(title = "Cantidad de incendios", tickformat = ",.0f"),
+      showlegend = FALSE,
+      annotations = list(list(
+        x = 1, y = 0,
+        text = "* p<0.05, ** p<0.01, *** p<0.001",
+        showarrow = FALSE, xref = "paper", yref = "paper",
+        xanchor = "right", yanchor = "bottom",
+        font = list(size = 10, color = "gray")
+      )),
+      margin = list(t = 70, r = 50, b = 60, l = 70)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico de comparación de períodos para viento
+output$grafico_comparacion_periodos_viento <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  
+  periodo1 <- datos |> filter(periodo == "2001-2012")
+  periodo2 <- datos |> filter(periodo == "2013-2024")
+  
+  if (nrow(periodo1) == 0 || nrow(periodo2) == 0) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Se requieren datos en ambos períodos",
+          annotations = list(list(
+            text = "Ajuste el rango de fechas para incluir ambos períodos",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  resumen <- datos |>
+    group_by(periodo) |>
+    summarise(
+      incendios_prom = mean(n_incendios, na.rm = TRUE),
+      incendios_sd = sd(n_incendios, na.rm = TRUE),
+      viento_prom = mean(vel_viento_promedio, na.rm = TRUE),
+      viento_sd = sd(vel_viento_promedio, na.rm = TRUE),
+      n = n(),
+      .groups = "drop"
+    ) |>
+    mutate(
+      incendios_error = qt(0.975, n - 1) * incendios_sd / sqrt(n),
+      viento_error = qt(0.975, n - 1) * viento_sd / sqrt(n)
+    )
+  
+  cambio_inc <- ((resumen$incendios_prom[2] - resumen$incendios_prom[1]) / resumen$incendios_prom[1]) * 100
+  cambio_viento <- ((resumen$viento_prom[2] - resumen$viento_prom[1]) / resumen$viento_prom[1]) * 100
+  
+  fig <- subplot(
+    plot_ly(resumen) |>
+      add_trace(
+        x = ~periodo, y = ~incendios_prom,
+        type = "bar", name = "Incendios",
+        marker = list(color = c("#3498db", "#e74c3c")),
+        error_y = list(type = "data", array = ~incendios_error, color = "black"),
+        hovertemplate = "<b>%{x}</b><br>Promedio: %{y:.0f} incendios/año<extra></extra>"
+      ) |>
+      layout(
+        yaxis = list(title = "Incendios promedio/año"),
+        annotations = list(list(
+          x = 0.5, y = 1.05,
+          text = sprintf("Cambio: %+.1f%%", cambio_inc),
+          showarrow = FALSE, xref = "paper", yref = "paper",
+          font = list(size = 12, color = if(cambio_inc > 0) "red" else "green")
+        ))
+      ),
+    plot_ly(resumen) |>
+      add_trace(
+        x = ~periodo, y = ~viento_prom,
+        type = "bar", name = "Viento",
+        marker = list(color = c("#6f42c1", "#9b59b6")),
+        error_y = list(type = "data", array = ~viento_error, color = "black"),
+        hovertemplate = "<b>%{x}</b><br>Viento: %{y:.2f} m/s<extra></extra>"
+      ) |>
+      layout(
+        yaxis = list(title = "Velocidad promedio (m/s)"),
+        annotations = list(list(
+          x = 0.5, y = 1.05,
+          text = sprintf("Cambio: %+.1f%%", cambio_viento),
+          showarrow = FALSE, xref = "paper", yref = "paper",
+          font = list(size = 12, color = if(cambio_viento > 0) "orange" else "green")
+        ))
+      ),
+    nrows = 1, shareX = TRUE, titleX = FALSE
+  ) |>
+    layout(
+      title = list(text = "Comparación entre períodos", font = list(size = 14)),
+      showlegend = FALSE,
+      margin = list(t = 70, b = 50)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico de anomalías de velocidad del viento
+output$grafico_anomalias_viento <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  titulo <- titulo_area()
+  
+  if (nrow(datos) < 2) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes",
+          annotations = list(list(
+            text = "Seleccione un rango de fechas más amplio",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  # Calcular anomalía de viento
+  datos <- datos |>
+    mutate(
+      viento_anomalia = vel_viento_promedio - mean(vel_viento_promedio, na.rm = TRUE)
+    )
+  
+  rango_anomalia <- range(datos$viento_anomalia, na.rm = TRUE)
+  datos <- datos |>
+    mutate(
+      incendios_escalados = scales::rescale(
+        n_incendios, 
+        to = c(rango_anomalia[1] * 0.8, rango_anomalia[2] * 0.8)
+      )
+    )
+  
+  fig <- plot_ly(datos) |>
+    add_trace(
+      x = ~anio, y = ~viento_anomalia,
+      type = "bar",
+      name = "Anomalía de viento",
+      marker = list(
+        # Más viento = naranja (puede propagar fuego), menos viento = verde
+        color = ~ifelse(viento_anomalia > 0, "#fd7e14", "#28a745")
+      ),
+      hovertemplate = "<b>%{x}</b><br>Anomalía: %{y:+.2f} m/s<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~anio, y = ~incendios_escalados,
+      type = "scatter", mode = "markers",
+      name = "Incendios (escalados)",
+      marker = list(
+        size = ~scales::rescale(n_incendios, to = c(8, 20)),
+        color = "black", symbol = "diamond",
+        line = list(color = "white", width = 1)
+      ),
+      customdata = ~n_incendios,
+      hovertemplate = "<b>%{x}</b><br>Incendios: %{customdata:,.0f}<extra></extra>"
+    ) |>
+    layout(
+      title = list(
+        text = paste("Anomalías de velocidad del viento -", titulo),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "Año", dtick = 2),
+      yaxis = list(
+        title = "Anomalía de velocidad del viento (m/s)",
+        zeroline = TRUE,
+        zerolinecolor = "black",
+        zerolinewidth = 1.5
+      ),
+      legend = list(orientation = "h", y = -0.15, x = 0.5, xanchor = "center"),
+      barmode = "relative",
+      margin = list(t = 50, b = 70)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# =============================================================================
+# TARJETAS Y GRÁFICOS PARA ANÁLISIS DE DIRECCIÓN DEL VIENTO
+# =============================================================================
+
+# Función auxiliar para convertir grados a dirección cardinal
+grados_a_cardinal <- function(grados) {
+  direcciones <- c("N", "NE", "E", "SE", "S", "SO", "O", "NO", "N")
+  indices <- round(grados / 45) + 1
+  indices[indices > 8] <- 1
+  direcciones[indices]
+}
+
+# Función auxiliar para calcular media circular
+media_circular <- function(angulos_grados) {
+  angulos_rad <- angulos_grados * pi / 180
+  x_mean <- mean(cos(angulos_rad), na.rm = TRUE)
+  y_mean <- mean(sin(angulos_rad), na.rm = TRUE)
+  media_rad <- atan2(y_mean, x_mean)
+  media_grados <- media_rad * 180 / pi
+  if (media_grados < 0) media_grados <- media_grados + 360
+  return(media_grados)
+}
+
+# Función auxiliar para calcular variabilidad circular (0-1, donde 0 = muy concentrado)
+variabilidad_circular <- function(angulos_grados) {
+  angulos_rad <- angulos_grados * pi / 180
+  x_mean <- mean(cos(angulos_rad), na.rm = TRUE)
+  y_mean <- mean(sin(angulos_rad), na.rm = TRUE)
+  R <- sqrt(x_mean^2 + y_mean^2)  # Longitud del vector resultante (0-1)
+  return(1 - R)  # Variabilidad: 0 = concentrado, 1 = disperso
+}
+
+# Función reactiva para datos de dirección por sector
+filtrar_datos_direccion <- reactive({
+  incendios_filtrados <- filtrar_incendios()
+  
+  # Crear sectores de 45 grados
+  datos_direccion <- incendios_filtrados |>
+    st_drop_geometry() |>
+    mutate(
+      direccion = X10M_WIND_DIRECTION_ACQ_DATE_MEAN,
+      sector = cut(
+        direccion,
+        breaks = c(0, 45, 90, 135, 180, 225, 270, 315, 360),
+        labels = c("N", "NE", "E", "SE", "S", "SO", "O", "NO"),
+        include.lowest = TRUE, right = FALSE
+      ),
+      mes = month(acq_date),
+      anio = year(acq_date)
+    )
+  
+  return(datos_direccion)
+})
+
+# Tarjetas de métricas para dirección del viento
+output$card_direccion_predominante <- renderUI({
+  datos <- filtrar_datos_direccion()
+  
+  if (nrow(datos) < 1 || all(is.na(datos$direccion))) {
+    return(HTML(crear_tarjeta("Sin datos", "#6c757d", "🧭")))
+  }
+  
+  direccion_media <- media_circular(datos$direccion)
+  cardinal <- grados_a_cardinal(direccion_media)
+  valor <- sprintf("%s (%.0f°)", cardinal, direccion_media)
+  
+  HTML(crear_tarjeta(valor, "#6f42c1", "🧭"))
+})
+
+output$card_tendencia_incendios_direccion <- renderUI({
+  datos <- filtrar_datos_anuales()
+  
+  if (nrow(datos) < 3) {
+    return(HTML(crear_tarjeta("Sin datos", "#6c757d", "🔥")))
+  }
+  
+  modelo <- lm(n_incendios ~ anio, data = datos)
+  tendencia <- coef(modelo)[2] * 10
+  
+  valor <- sprintf("%+.0f /déc", tendencia)
+  color <- if(tendencia <= 0) "#28a745" else "#dc3545"
+  
+  HTML(crear_tarjeta(valor, color, "🔥"))
+})
+
+output$card_variabilidad_direccion <- renderUI({
+  datos <- filtrar_datos_direccion()
+  
+  if (nrow(datos) < 1 || all(is.na(datos$direccion))) {
+    return(HTML(crear_tarjeta("Sin datos", "#6c757d", "🔄")))
+  }
+  
+  variabilidad <- variabilidad_circular(datos$direccion)
+  
+  # Interpretar variabilidad
+  interpretacion <- if(variabilidad < 0.3) {
+    "Baja"
+  } else if(variabilidad < 0.6) {
+    "Media"
+  } else {
+    "Alta"
+  }
+  
+  valor <- sprintf("%s (%.2f)", interpretacion, variabilidad)
+  color <- if(variabilidad < 0.3) "#28a745" else if(variabilidad < 0.6) "#ffc107" else "#dc3545"
+  
+  HTML(crear_tarjeta(valor, color, "🔄"))
+})
+
+output$card_cambio_periodo_direccion <- renderUI({
+  datos <- filtrar_datos_anuales()
+  
+  periodo1 <- datos |> filter(periodo == "2001-2012")
+  periodo2 <- datos |> filter(periodo == "2013-2024")
+  
+  if (nrow(periodo1) == 0 || nrow(periodo2) == 0) {
+    return(HTML(crear_tarjeta("Sin datos", "#6c757d", "↔️")))
+  }
+  
+  prom1 <- mean(periodo1$n_incendios, na.rm = TRUE)
+  prom2 <- mean(periodo2$n_incendios, na.rm = TRUE)
+  cambio_pct <- ((prom2 - prom1) / prom1) * 100
+  
+  valor <- sprintf("%+.1f%%", cambio_pct)
+  color <- if(cambio_pct > 10) "#dc3545" else if(cambio_pct < -10) "#28a745" else "#ffc107"
+  
+  HTML(crear_tarjeta(valor, color, "↔️"))
+})
+
+# Rosa de vientos con incendios
+output$grafico_rosa_vientos <- renderPlotly({
+  datos <- filtrar_datos_direccion()
+  titulo <- titulo_area()
+  
+  if (nrow(datos) < 1 || all(is.na(datos$sector))) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes",
+          annotations = list(list(
+            text = "No hay datos de dirección del viento",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  # Contar incendios por sector
+  resumen <- datos |>
+    filter(!is.na(sector)) |>
+    group_by(sector) |>
+    summarise(n_incendios = n(), .groups = "drop") |>
+    mutate(
+      porcentaje = n_incendios / sum(n_incendios) * 100,
+      angulo = c(0, 45, 90, 135, 180, 225, 270, 315)[match(sector, c("N", "NE", "E", "SE", "S", "SO", "O", "NO"))]
+    )
+  
+  # Asegurar todos los sectores
+  todos_sectores <- data.frame(
+    sector = factor(c("N", "NE", "E", "SE", "S", "SO", "O", "NO"), 
+                    levels = c("N", "NE", "E", "SE", "S", "SO", "O", "NO")),
+    angulo = c(0, 45, 90, 135, 180, 225, 270, 315)
+  )
+  
+  resumen <- todos_sectores |>
+    left_join(resumen |> select(sector, n_incendios, porcentaje), by = "sector") |>
+    mutate(
+      n_incendios = coalesce(n_incendios, 0L),
+      porcentaje = coalesce(porcentaje, 0)
+    )
+  
+  # Gráfico polar (rosa de vientos)
+  fig <- plot_ly(resumen) |>
+    add_trace(
+      type = "barpolar",
+      r = ~porcentaje,
+      theta = ~sector,
+      name = "Incendios",
+      marker = list(
+        color = ~porcentaje,
+        colorscale = list(c(0, "#fef0d9"), c(0.5, "#fdbb84"), c(1, "#b30000")),
+        line = list(color = "white", width = 1)
+      ),
+      hovertemplate = "<b>%{theta}</b><br>Incendios: %{customdata:,.0f}<br>Porcentaje: %{r:.1f}%<extra></extra>",
+      customdata = ~n_incendios
+    ) |>
+    layout(
+      title = list(
+        text = paste("Rosa de vientos (dirección durante incendios) -", titulo),
+        font = list(size = 14)
+      ),
+      polar = list(
+        angularaxis = list(
+          direction = "clockwise",
+          rotation = 90,
+          tickfont = list(size = 12)
+        ),
+        radialaxis = list(
+          title = "%",
+          ticksuffix = "%"
+        )
+      ),
+      showlegend = FALSE,
+      margin = list(t = 60, b = 40)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico de barras por sector
+output$grafico_direccion_incendios <- renderPlotly({
+  datos <- filtrar_datos_direccion()
+  titulo <- titulo_area()
+  
+  if (nrow(datos) < 1 || all(is.na(datos$sector))) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes",
+          annotations = list(list(
+            text = "No hay datos de dirección del viento",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  # Resumen por sector con FRP promedio
+  resumen <- datos |>
+    filter(!is.na(sector)) |>
+    group_by(sector) |>
+    summarise(
+      n_incendios = n(),
+      frp_promedio = mean(frp, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    mutate(sector = factor(sector, levels = c("N", "NE", "E", "SE", "S", "SO", "O", "NO")))
+  
+  fig <- plot_ly(resumen) |>
+    add_trace(
+      x = ~sector, y = ~n_incendios,
+      type = "bar",
+      name = "Incendios",
+      marker = list(color = "#e74c3c"),
+      hovertemplate = "<b>%{x}</b><br>Incendios: %{y:,.0f}<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~sector, y = ~frp_promedio,
+      type = "scatter", mode = "lines+markers",
+      name = "FRP promedio (MW)",
+      yaxis = "y2",
+      line = list(color = "#fd7e14", width = 2),
+      marker = list(size = 8, color = "#fd7e14"),
+      hovertemplate = "<b>%{x}</b><br>FRP: %{y:.1f} MW<extra></extra>"
+    ) |>
+    layout(
+      title = list(
+        text = paste("Incendios y FRP por dirección del viento -", titulo),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "Dirección del viento"),
+      yaxis = list(title = "Cantidad de incendios", titlefont = list(color = "#e74c3c")),
+      yaxis2 = list(
+        title = "FRP promedio (MW)",
+        overlaying = "y", side = "right",
+        titlefont = list(color = "#fd7e14"),
+        tickfont = list(color = "#fd7e14")
+      ),
+      legend = list(orientation = "h", y = -0.2, x = 0.5, xanchor = "center"),
+      margin = list(t = 50, b = 80)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico temporal de dirección
+output$grafico_direccion_temporal <- renderPlotly({
+  datos <- filtrar_datos_direccion()
+  titulo <- titulo_area()
+  
+  if (nrow(datos) < 1) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes",
+          annotations = list(list(
+            text = "No hay datos disponibles",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  # Calcular dirección media por año
+  resumen_anual <- datos |>
+    filter(!is.na(direccion)) |>
+    group_by(anio) |>
+    summarise(
+      direccion_media = media_circular(direccion),
+      n_incendios = n(),
+      variabilidad = variabilidad_circular(direccion),
+      .groups = "drop"
+    ) |>
+    mutate(cardinal = grados_a_cardinal(direccion_media))
+  
+  fig <- plot_ly(resumen_anual) |>
+    add_trace(
+      x = ~anio, y = ~direccion_media,
+      type = "scatter", mode = "lines+markers",
+      name = "Dirección media (°)",
+      line = list(color = "#6f42c1", width = 2),
+      marker = list(size = 10, color = "#6f42c1"),
+      text = ~cardinal,
+      hovertemplate = "<b>%{x}</b><br>Dirección: %{y:.0f}° (%{text})<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~anio, y = ~n_incendios,
+      type = "bar",
+      name = "Incendios",
+      yaxis = "y2",
+      marker = list(color = "#e74c3c", opacity = 0.5),
+      hovertemplate = "<b>%{x}</b><br>Incendios: %{y:,.0f}<extra></extra>"
+    ) |>
+    layout(
+      title = list(
+        text = paste("Dirección media del viento por año -", titulo),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "Año", dtick = 2),
+      yaxis = list(
+        title = "Dirección media (°)",
+        range = c(0, 360),
+        tickvals = c(0, 90, 180, 270, 360),
+        ticktext = c("N (0°)", "E (90°)", "S (180°)", "O (270°)", "N (360°)"),
+        titlefont = list(color = "#6f42c1")
+      ),
+      yaxis2 = list(
+        title = "Cantidad de incendios",
+        overlaying = "y", side = "right",
+        titlefont = list(color = "#e74c3c")
+      ),
+      legend = list(orientation = "h", y = -0.2, x = 0.5, xanchor = "center"),
+      barmode = "overlay",
+      margin = list(t = 50, b = 80)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico mensual de dirección
+output$grafico_direccion_mensual <- renderPlotly({
+  datos <- filtrar_datos_direccion()
+  titulo <- titulo_area()
+  
+  if (nrow(datos) < 1) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes",
+          annotations = list(list(
+            text = "No hay datos disponibles",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  # Calcular dirección media por mes
+  meses_nombres <- c("Ene", "Feb", "Mar", "Abr", "May", "Jun", 
+                     "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+  
+  resumen_mensual <- datos |>
+    filter(!is.na(direccion)) |>
+    group_by(mes) |>
+    summarise(
+      direccion_media = media_circular(direccion),
+      n_incendios = n(),
+      .groups = "drop"
+    ) |>
+    mutate(
+      mes_nombre = factor(meses_nombres[mes], levels = meses_nombres),
+      cardinal = grados_a_cardinal(direccion_media)
+    )
+  
+  fig <- plot_ly(resumen_mensual) |>
+    add_trace(
+      x = ~mes_nombre, y = ~n_incendios,
+      type = "bar",
+      name = "Incendios",
+      marker = list(color = "#e74c3c"),
+      hovertemplate = "<b>%{x}</b><br>Incendios: %{y:,.0f}<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~mes_nombre, y = ~direccion_media,
+      type = "scatter", mode = "lines+markers",
+      name = "Dirección media (°)",
+      yaxis = "y2",
+      line = list(color = "#6f42c1", width = 2),
+      marker = list(size = 10, color = "#6f42c1"),
+      text = ~cardinal,
+      hovertemplate = "<b>%{x}</b><br>Dirección: %{y:.0f}° (%{text})<extra></extra>"
+    ) |>
+    layout(
+      title = list(
+        text = paste("Incendios y dirección del viento por mes -", titulo),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "Mes"),
+      yaxis = list(title = "Cantidad de incendios", titlefont = list(color = "#e74c3c")),
+      yaxis2 = list(
+        title = "Dirección media (°)",
+        overlaying = "y", side = "right",
+        range = c(0, 360),
+        tickvals = c(0, 90, 180, 270, 360),
+        ticktext = c("N", "E", "S", "O", "N"),
+        titlefont = list(color = "#6f42c1")
+      ),
+      legend = list(orientation = "h", y = -0.2, x = 0.5, xanchor = "center"),
+      margin = list(t = 50, b = 80)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# =============================================================================
+# TARJETAS Y GRÁFICOS PARA ANÁLISIS INTEGRADO
+# =============================================================================
+
+# Tarjetas de resumen para análisis integrado
+output$card_resumen_temp <- renderUI({
+  metricas <- calcular_metricas()
+  
+  if(is.na(metricas$tendencia_temp)) {
+    return(HTML(crear_tarjeta("Sin datos", "#6c757d", "🌡️")))
+  }
+  
+  tendencia <- metricas$tendencia_temp
+  signo <- if(tendencia > 0) "↑" else "↓"
+  color <- if(tendencia > 0) "#dc3545" else "#17a2b8"
+  valor <- sprintf("%s %+.2f°C/déc", signo, tendencia)
+  
+  HTML(crear_tarjeta(valor, color, "🌡️"))
+})
+
+output$card_resumen_precip <- renderUI({
+  metricas <- calcular_metricas_precip()
+  
+  if(is.na(metricas$tendencia_precip)) {
+    return(HTML(crear_tarjeta("Sin datos", "#6c757d", "🌧️")))
+  }
+  
+  tendencia <- metricas$tendencia_precip
+  signo <- if(tendencia > 0) "↑" else "↓"
+  # Menos lluvia es preocupante
+  color <- if(tendencia < 0) "#dc3545" else "#17a2b8"
+  valor <- sprintf("%s %+.2f mm/déc", signo, tendencia)
+  
+  HTML(crear_tarjeta(valor, color, "🌧️"))
+})
+
+output$card_resumen_viento <- renderUI({
+  metricas <- calcular_metricas_viento()
+  
+  if(is.na(metricas$tendencia_viento)) {
+    return(HTML(crear_tarjeta("Sin datos", "#6c757d", "💨")))
+  }
+  
+  tendencia <- metricas$tendencia_viento
+  signo <- if(tendencia > 0) "↑" else "↓"
+  color <- if(tendencia > 0) "#fd7e14" else "#28a745"
+  valor <- sprintf("%s %+.2f m/s/déc", signo, tendencia)
+  
+  HTML(crear_tarjeta(valor, color, "💨"))
+})
+
+output$card_resumen_incendios <- renderUI({
+  metricas <- calcular_metricas()
+  
+  if(is.na(metricas$tendencia_incendios)) {
+    return(HTML(crear_tarjeta("Sin datos", "#6c757d", "🔥")))
+  }
+  
+  tendencia <- metricas$tendencia_incendios
+  signo <- if(tendencia > 0) "↑" else "↓"
+  color <- if(tendencia > 0) "#dc3545" else "#28a745"
+  valor <- sprintf("%s %+.0f/déc", signo, tendencia)
+  
+  HTML(crear_tarjeta(valor, color, "🔥"))
+})
+
+output$card_correlacion_maxima <- renderUI({
+  datos <- filtrar_datos_anuales()
+  
+  if(nrow(datos) < 3) {
+    return(HTML(crear_tarjeta("Sin datos", "#6c757d", "🔗")))
+  }
+  
+  # Calcular correlaciones con incendios
+  cor_temp <- cor(datos$temp_promedio, datos$n_incendios, use = "complete.obs")
+  cor_precip <- cor(datos$precip_promedio, datos$n_incendios, use = "complete.obs")
+  cor_viento <- cor(datos$vel_viento_promedio, datos$n_incendios, use = "complete.obs")
+  
+  correlaciones <- c(
+    "Temp" = cor_temp,
+    "Precip" = cor_precip,
+    "Viento" = cor_viento
+  )
+  
+  # Encontrar la más fuerte (en valor absoluto)
+  idx_max <- which.max(abs(correlaciones))
+  nombre_max <- names(correlaciones)[idx_max]
+  valor_max <- correlaciones[idx_max]
+  
+  icono <- switch(nombre_max,
+    "Temp" = "🌡️",
+    "Precip" = "🌧️",
+    "Viento" = "💨"
+  )
+  
+  color <- if(abs(valor_max) > 0.5) "#ffc107" else "#6c757d"
+  valor <- sprintf("%s r=%.2f", nombre_max, valor_max)
+  
+  HTML(crear_tarjeta(valor, color, icono))
+})
+
+# Matriz de correlación
+output$grafico_matriz_correlacion <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  titulo <- titulo_area()
+  
+  if(nrow(datos) < 3) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes",
+          annotations = list(list(
+            text = "Se requieren al menos 3 años de datos",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  # Seleccionar variables para la matriz
+  vars_matriz <- datos |>
+    select(
+      Incendios = n_incendios,
+      Temperatura = temp_promedio,
+      Precipitación = precip_promedio,
+      Viento = vel_viento_promedio,
+      FRP = frp_promedio
+    )
+  
+  # Calcular matriz de correlación
+  mat_cor <- cor(vars_matriz, use = "pairwise.complete.obs")
+  
+  # Crear heatmap
+  fig <- plot_ly(
+    x = colnames(mat_cor),
+    y = rownames(mat_cor),
+    z = mat_cor,
+    type = "heatmap",
+    colorscale = list(
+      list(0, "#2166ac"),
+      list(0.5, "#f7f7f7"),
+      list(1, "#b2182b")
+    ),
+    zmin = -1, zmax = 1,
+    hovertemplate = "%{y} vs %{x}<br>r = %{z:.3f}<extra></extra>"
+  )
+  
+  # Agregar valores de texto
+  for(i in 1:nrow(mat_cor)) {
+    for(j in 1:ncol(mat_cor)) {
+      fig <- fig |>
+        add_annotations(
+          x = colnames(mat_cor)[j],
+          y = rownames(mat_cor)[i],
+          text = sprintf("%.2f", mat_cor[i,j]),
+          showarrow = FALSE,
+          font = list(
+            size = 11,
+            color = if(abs(mat_cor[i,j]) > 0.5) "white" else "black"
+          )
+        )
+    }
+  }
+  
+  fig <- fig |>
+    layout(
+      title = list(
+        text = paste("Matriz de correlación -", titulo),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "", tickangle = 45),
+      yaxis = list(title = "", autorange = "reversed"),
+      margin = list(t = 60, b = 100, l = 100)
+    ) |>
+    colorbar(title = "r", tickvals = c(-1, -0.5, 0, 0.5, 1)) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico de interacción temperatura × precipitación
+output$grafico_interaccion_temp_precip <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  titulo <- titulo_area()
+  
+  if(nrow(datos) < 3) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes",
+          annotations = list(list(
+            text = "Se requieren al menos 3 años de datos",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  # Clasificar años por cuadrante
+  temp_media <- mean(datos$temp_promedio, na.rm = TRUE)
+  precip_media <- mean(datos$precip_promedio, na.rm = TRUE)
+  
+  datos <- datos |>
+    mutate(
+      cuadrante = case_when(
+        temp_promedio >= temp_media & precip_promedio < precip_media ~ "Cálido y seco",
+        temp_promedio >= temp_media & precip_promedio >= precip_media ~ "Cálido y húmedo",
+        temp_promedio < temp_media & precip_promedio < precip_media ~ "Frío y seco",
+        TRUE ~ "Frío y húmedo"
+      )
+    )
+  
+  # Escalar tamaño de puntos
+  inc_min <- min(datos$n_incendios)
+  inc_max <- max(datos$n_incendios)
+  datos$size_scaled <- 10 + (datos$n_incendios - inc_min) / (inc_max - inc_min) * 30
+  
+  colores_cuadrante <- c(
+    "Cálido y seco" = "#dc3545",
+    "Cálido y húmedo" = "#fd7e14",
+    "Frío y seco" = "#6c757d",
+    "Frío y húmedo" = "#17a2b8"
+  )
+  
+  fig <- plot_ly(datos) |>
+    add_trace(
+      x = ~temp_promedio,
+      y = ~precip_promedio,
+      type = "scatter",
+      mode = "markers+text",
+      color = ~cuadrante,
+      colors = colores_cuadrante,
+      marker = list(
+        size = ~size_scaled,
+        line = list(color = "white", width = 1),
+        opacity = 0.8
+      ),
+      text = ~anio,
+      textposition = "middle center",
+      textfont = list(size = 8, color = "white"),
+      hovertemplate = paste0(
+        "<b>Año: %{text}</b><br>",
+        "Temp: %{x:.1f}°C<br>",
+        "Precip: %{y:.2f} mm<br>",
+        "Incendios: %{customdata:,.0f}",
+        "<extra></extra>"
+      ),
+      customdata = ~n_incendios
+    ) |>
+    # Líneas de referencia
+    add_segments(
+      x = temp_media, xend = temp_media,
+      y = min(datos$precip_promedio) * 0.95, yend = max(datos$precip_promedio) * 1.05,
+      line = list(color = "gray", dash = "dash", width = 1),
+      showlegend = FALSE, hoverinfo = "skip"
+    ) |>
+    add_segments(
+      x = min(datos$temp_promedio) * 0.99, xend = max(datos$temp_promedio) * 1.01,
+      y = precip_media, yend = precip_media,
+      line = list(color = "gray", dash = "dash", width = 1),
+      showlegend = FALSE, hoverinfo = "skip"
+    ) |>
+    layout(
+      title = list(
+        text = paste("Interacción clima-incendios -", titulo, "<br><sup>Tamaño = cantidad de incendios</sup>"),
+        font = list(size = 13)
+      ),
+      xaxis = list(title = "Temperatura promedio (°C)"),
+      yaxis = list(title = "Precipitación promedio (mm)"),
+      legend = list(orientation = "h", y = -0.15, x = 0.5, xanchor = "center"),
+      margin = list(t = 70, b = 80)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico de tendencias normalizadas
+output$grafico_tendencias_multiples <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  titulo <- titulo_area()
+  
+  if(nrow(datos) < 2) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes",
+          annotations = list(list(
+            text = "Seleccione un rango de fechas más amplio",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  # Normalizar variables (z-score)
+  datos_norm <- datos |>
+    mutate(
+      temp_norm = (temp_promedio - mean(temp_promedio, na.rm = TRUE)) / sd(temp_promedio, na.rm = TRUE),
+      precip_norm = (precip_promedio - mean(precip_promedio, na.rm = TRUE)) / sd(precip_promedio, na.rm = TRUE),
+      viento_norm = (vel_viento_promedio - mean(vel_viento_promedio, na.rm = TRUE)) / sd(vel_viento_promedio, na.rm = TRUE),
+      incendios_norm = (n_incendios - mean(n_incendios, na.rm = TRUE)) / sd(n_incendios, na.rm = TRUE)
+    )
+  
+  fig <- plot_ly(datos_norm) |>
+    add_trace(
+      x = ~anio, y = ~temp_norm,
+      type = "scatter", mode = "lines+markers",
+      name = "Temperatura",
+      line = list(color = "#e74c3c", width = 2),
+      marker = list(size = 6, color = "#e74c3c"),
+      hovertemplate = "<b>%{x}</b><br>Temp (z): %{y:.2f}<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~anio, y = ~precip_norm,
+      type = "scatter", mode = "lines+markers",
+      name = "Precipitación",
+      line = list(color = "#17a2b8", width = 2),
+      marker = list(size = 6, color = "#17a2b8"),
+      hovertemplate = "<b>%{x}</b><br>Precip (z): %{y:.2f}<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~anio, y = ~viento_norm,
+      type = "scatter", mode = "lines+markers",
+      name = "Viento",
+      line = list(color = "#6f42c1", width = 2),
+      marker = list(size = 6, color = "#6f42c1"),
+      hovertemplate = "<b>%{x}</b><br>Viento (z): %{y:.2f}<extra></extra>"
+    ) |>
+    add_trace(
+      x = ~anio, y = ~incendios_norm,
+      type = "scatter", mode = "lines+markers",
+      name = "Incendios",
+      line = list(color = "#fd7e14", width = 3),
+      marker = list(size = 8, color = "#fd7e14"),
+      hovertemplate = "<b>%{x}</b><br>Incendios (z): %{y:.2f}<extra></extra>"
+    ) |>
+    layout(
+      title = list(
+        text = paste("Variables normalizadas (z-score) -", titulo),
+        font = list(size = 14)
+      ),
+      xaxis = list(title = "Año", dtick = 2),
+      yaxis = list(
+        title = "Valor estandarizado (z-score)",
+        zeroline = TRUE,
+        zerolinecolor = "black",
+        zerolinewidth = 1
+      ),
+      legend = list(orientation = "h", y = -0.15, x = 0.5, xanchor = "center"),
+      hovermode = "x unified",
+      margin = list(t = 50, b = 80)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# Gráfico de condiciones de riesgo
+output$grafico_condiciones_riesgo <- renderPlotly({
+  datos <- filtrar_datos_anuales()
+  titulo <- titulo_area()
+  
+  if(nrow(datos) < 3) {
+    return(
+      plot_ly() |>
+        layout(
+          title = "Datos insuficientes",
+          annotations = list(list(
+            text = "Se requieren al menos 3 años de datos",
+            x = 0.5, y = 0.5, xref = "paper", yref = "paper",
+            showarrow = FALSE, font = list(size = 14)
+          ))
+        )
+    )
+  }
+  
+  # Calcular índice de riesgo compuesto
+  # Alta temp + baja precip + alto viento = alto riesgo
+  datos <- datos |>
+    mutate(
+      temp_score = (temp_promedio - min(temp_promedio)) / (max(temp_promedio) - min(temp_promedio)),
+      precip_score = 1 - (precip_promedio - min(precip_promedio)) / (max(precip_promedio) - min(precip_promedio)),
+      viento_score = (vel_viento_promedio - min(vel_viento_promedio)) / (max(vel_viento_promedio) - min(vel_viento_promedio)),
+      indice_riesgo = (temp_score + precip_score + viento_score) / 3,
+      categoria_riesgo = case_when(
+        indice_riesgo >= 0.66 ~ "Alto",
+        indice_riesgo >= 0.33 ~ "Medio",
+        TRUE ~ "Bajo"
+      )
+    )
+  
+  colores_riesgo <- c("Bajo" = "#28a745", "Medio" = "#ffc107", "Alto" = "#dc3545")
+  
+  fig <- plot_ly(datos) |>
+    add_trace(
+      x = ~anio, y = ~indice_riesgo,
+      type = "bar",
+      color = ~categoria_riesgo,
+      colors = colores_riesgo,
+      hovertemplate = paste0(
+        "<b>%{x}</b><br>",
+        "Índice de riesgo: %{y:.2f}<br>",
+        "Incendios: %{customdata:,.0f}",
+        "<extra></extra>"
+      ),
+      customdata = ~n_incendios
+    ) |>
+    add_trace(
+      x = ~anio, y = ~scales::rescale(n_incendios, to = c(0, 1)),
+      type = "scatter", mode = "lines+markers",
+      name = "Incendios (escalados)",
+      line = list(color = "black", width = 2),
+      marker = list(size = 8, color = "black"),
+      hovertemplate = "<b>%{x}</b><br>Incendios: %{customdata:,.0f}<extra></extra>",
+      customdata = ~n_incendios
+    ) |>
+    layout(
+      title = list(
+        text = paste("Índice de riesgo climático -", titulo, "<br><sup>Combina: temperatura (+), precipitación (-), viento (+)</sup>"),
+        font = list(size = 13)
+      ),
+      xaxis = list(title = "Año", dtick = 2),
+      yaxis = list(
+        title = "Índice de riesgo (0-1)",
+        range = c(0, 1.1)
+      ),
+      legend = list(orientation = "h", y = -0.15, x = 0.5, xanchor = "center"),
+      barmode = "overlay",
+      margin = list(t = 70, b = 80)
+    ) |>
+    config(locale = "es")
+  
+  fig
+})
+
+# =============================================================================
+# OUTPUTS EXISTENTES (del dashboard original)
+# =============================================================================
+
+# Gráfico interactivo de cantidad de incendios por AC
+output$grafico_cantidad_incendios_ac <- renderPlotly({
+  ac_incendios_filtradas <- filtrar_ac_incendios()
+  
+  # Definir el gráfico ggplot2
+  g <- ac_incendios_filtradas |>
+    ggplot(aes(x = reorder(nombre_ac, incendios_n), y = incendios_n)) +
+    geom_col(fill = "darkred") +
+    xlab("AC") +
+    ylab("Cantidad de incendios") +
+    coord_flip() +
+    theme_minimal()
+  
+  # Convertir a plotly y agregar tooltip personalizado
+  ggplotly(g, tooltip = c("x", "y")) |> 
+    style(
+      hovertemplate = paste(
+        '%{y}<br>',
+        'Incendios: %{x:.0f}<br>',
+        '<extra></extra>'
+      )
+    ) |>
+    config(locale = 'es')
+})
+
+# Gráfico interactivo de cantidad de incendios por ASP
+output$grafico_cantidad_incendios_asp <- renderPlotly({
+  asp_incendios_filtradas <- filtrar_asp_incendios()
+  
+  # Definir el gráfico ggplot2
+  g <- asp_incendios_filtradas |>
+    ggplot(aes(x = reorder(nombre_asp, incendios_n), y = incendios_n)) +
+    geom_col(fill = "darkgreen") +
+    xlab("ASP") +
+    ylab("Cantidad de incendios") +
+    coord_flip() +
+    theme_minimal()
+  
+  # Convertir a plotly con tooltip personalizado
+  ggplotly(g, tooltip = c("x", "y")) |> 
+    style(
+      hovertemplate = paste(
+        '%{y}<br>',
+        'Incendios: %{x:.0f}<br>',
+        '<extra></extra>'
+      )
+    ) |>
+    config(locale = 'es')
+})
+
+# Tabla de registros
+output$tabla_registros_incendios <- renderDataTable({
+  incendios_filtrados <- filtrar_incendios()
+  
+  incendios_filtrados |>
+    st_drop_geometry() |>
+    select(
+      AC = nombre_ac,
+      ASP = nombre_asp,
+      Fecha = acq_date,
+      Hora = acq_time,
+      `FRP (MW)` = frp,
+      Brillantez = brightness,
+      Confianza = confidence,
+      `Temp. (°C)` = TEMPERATURE_2M_ACQ_DATE_MEAN,
+      `Prec. (mm)` = PRECIPITATION_ACQ_DATE_SUM,
+      `Vel. viento (m/s)` = X10M_WIND_SPEED_ACQ_DATE_MEAN,
+      `Dir. viento (°)` = X10M_WIND_DIRECTION_ACQ_DATE_MEAN
+    ) |>
+    mutate(
+      across(c(`Temp. (°C)`, `Prec. (mm)`, `Vel. viento (m/s)`, `Dir. viento (°)`),
+             ~ round(.x, 1))
+    ) |>
+    arrange(desc(Fecha))
+},
+options = list(
+  pageLength = 10,
+  language = list(
+    url = "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
+  )
+))
+
+# Gráfico interactivo de cantidad de incendios por año
+output$grafico_cantidad_incendios_anio <- renderPlotly({
+  # Filtrar el conjunto de datos
+  incendios_filtrados <- filtrar_incendios()
+  
+  # Incendios agrupados por año
+  incendios_por_anio <-
+    incendios_filtrados |>
+    mutate(anio = year(acq_date)) |>
+    group_by(anio) |>
+    summarize(
+      n = n(),
+      .groups = "drop"
+    )
+  
+  # Obtener los límites del eje x basados en los datos filtrados
+  anio_minimo <- year(min(incendios_filtrados$acq_date, na.rm = TRUE))
+  anio_maximo <- year(max(incendios_filtrados$acq_date, na.rm = TRUE))
+  lim_x <- c(anio_minimo, anio_maximo)
+  
+  # Serie base con tooltips
+  serie_na <-
+    incendios_por_anio |>
+    dplyr::arrange(anio) |>
+    dplyr::mutate(
+      tt_n = paste0(
+        "Año: ", anio,
+        "<br>Cantidad de incendios: ", scales::comma(n)
+      )
+    )
+  
+  # Datos para líneas de tendencia (ignorar NA)
+  df_n <- tidyr::drop_na(serie_na, n)
+  
+  # Solo crear línea de tendencia si hay al menos 2 puntos
+  if (nrow(df_n) > 1) {
+    pred_n <- tibble::tibble(
+      anio = df_n$anio,
+      yhat = predict(stats::lm(n ~ anio, data = df_n), newdata = df_n)
+    )
+  } else {
+    pred_n <- NULL
+  }
+  
+  # Plotly con línea de incendios
+  fig <- plotly::plot_ly() |>
+    plotly::add_lines(
+      data = serie_na,
+      x = ~anio, y = ~n,
+      name = "Cantidad de incendios",
+      line = list(color = "red", width = 2),
+      hovertemplate = ~tt_n
+    )
+  
+  # Agregar línea de tendencia solo si existe
+  if (!is.null(pred_n)) {
+    fig <- fig |>
+      plotly::add_lines(
+        data = pred_n, x = ~anio, y = ~yhat,
+        name = "Tendencia",
+        showlegend = TRUE,
+        line = list(color = "red", dash = "dash", width = 1),
+        hovertemplate = paste0(
+        "Tendencia",
+        "<br>Año: %{x}",
+        "<br>Valor: %{y:,.0f}",
+        "<extra></extra>"
+      )
+      )
+  }
+  
+  # Configurar el layout con límites del eje x dinámicos
+  fig <- fig |>
+    plotly::layout(
+      xaxis = list(
+        title = "Año",
+        range = lim_x,  # aplicar los límites dinámicos
+        dtick = 1       # mostrar cada año
+      ),
+      yaxis = list(
+        title = "Cantidad de incendios",
+        tickformat = ",.0f",
+        automargin = TRUE
+      ),
+      legend = list(orientation = "h", x = 0, y = 1.15),
+      margin = list(t = 90, r = 80, b = 60, l = 60)
+    ) |>
+    plotly::config(locale = "es", displayModeBar = TRUE)
+
+  fig
+})
+
+# Gráfico interactivo de cantidad de incendios por año
+output$grafico_cantidad_incendios_anio_mes <- renderPlotly({
+  # Filtrar el conjunto de datos
+  incendios_filtrados <- filtrar_incendios()
+  
+  # Incendios agrupados por año y mes
+  incendios_por_anio_mes <-
+    incendios_filtrados |>
+    mutate(
+      anio = year(acq_date),
+      mes  = month(acq_date, label = TRUE, abbr = TRUE)
+    ) |>
+    group_by(anio, mes) |>
+    summarize(n = n(), .groups = "drop")
+
+  # Asegurar que los meses queden en orden enero-diciembre
+  incendios_por_anio_mes$mes <- factor(
+    incendios_por_anio_mes$mes,
+    levels = month(ymd("2025-01-01") + months(0:11), label = TRUE, abbr = TRUE)
+  )
+  
+  # Traducir las abreviaturas de los meses a español
+  incendios_por_anio_mes <-
+    incendios_por_anio_mes |>
+      mutate(
+        mes = factor(
+          mes,
+          levels = month.abb,
+          labels = c("Ene", "Feb", "Mar", "Abr", "May", "Jun",
+                     "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+        )
+      )
+  
+  # Heatmap
+  g <-
+    ggplot(
+      incendios_por_anio_mes,
+      aes(
+        x = mes,
+        y = factor(anio),
+        fill = n,
+        text = paste0(
+          "Año: ", anio,
+          "<br>Mes: ", mes,
+          "<br>Cantidad de incendios: ", n
+        )
+      )
+    ) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c(name = "Incendios", option = "inferno", direction = -1) +
+    labs(
+      x = "Mes",
+      y = "Año"
+    ) +
+    theme_minimal(base_size = 10) +
+    theme(
+      panel.grid = element_blank(),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+  
+  # Convertir a gráfico interactivo plotly
+  g_interactivo <- 
+   ggplotly(g, tooltip = "text") |> 
+   config(locale = 'es')
+  
+  # Mostrar gráfico
+  # g
+  g_interactivo
+  
+})
+  
+# Mapa interactivo
+output$mapa <- renderTmap({
+  # Filtrar conjuntos de datos
+  incendios_filtrados <- filtrar_incendios() |>
+    mutate(
+      across(
+        c(TEMPERATURE_2M_ACQ_DATE_MEAN, PRECIPITATION_ACQ_DATE_SUM,
+          X10M_WIND_SPEED_ACQ_DATE_MEAN, X10M_WIND_DIRECTION_ACQ_DATE_MEAN),
+        ~ round(.x, 1)
+      )
+    )
+  ac_incendios_filtradas  <- filtrar_ac_incendios()
+  asp_incendios_filtradas <- filtrar_asp_incendios()
+  
+  # Mapa base
+  mapa <- tm_basemap(c(
+    "CartoDB.Positron", 
+    "OpenStreetMap", 
+    "Esri.WorldImagery"
+  ))
+    
+  # Agregar capa de AC solo si hay datos
+  if (nrow(ac_incendios_filtradas) > 0) {
+    # Verificar variabilidad en los datos
+    valores_unicos_ac <- length(unique(ac_incendios_filtradas$incendios_n))
+    max_valor_ac <- max(ac_incendios_filtradas$incendios_n, na.rm = TRUE)
+    
+    if (valores_unicos_ac > 1 && max_valor_ac > 0) {
+      # Si hay variación y no todos son 0, usar escala de intervalos
+      mapa <- mapa +
+        tm_shape(ac_incendios_filtradas, name = "AC") +
+          tm_polygons(
+            fill = "incendios_n",
+            fill.scale = tm_scale_intervals(
+              style = "pretty", 
+              values = "brewer.reds",
+              n = min(5, valores_unicos_ac)
+            ),
+            fill.legend = tm_legend(title = "Incendios en AC"),
+            fill_alpha = 0.3,
+            id = "nombre_ac",
+            popup.vars = c("AC" = "nombre_ac", "Incendios" = "incendios_n")
+          ) +
+          tm_borders(col = "black", lwd = 1.5)
+    } else {
+      # Si todos los valores son iguales o todos son 0, usar color fijo
+      mapa <- mapa +
+        tm_shape(ac_incendios_filtradas, name = "AC") +
+          tm_polygons(
+            fill = "#fee5d9", # color fijo (rojo muy claro)
+            fill_alpha = 0.3,
+            id = "nombre_ac",
+            popup.vars = c("AC" = "nombre_ac", "Incendios" = "incendios_n")
+          ) +
+          tm_borders(col = "black", lwd = 1.5)
+    }
+  }
+  
+  # Agregar capa de ASP solo si hay datos
+  if (nrow(asp_incendios_filtradas) > 0) {
+    # Verificar variabilidad en los datos
+    valores_unicos_asp <- length(unique(asp_incendios_filtradas$incendios_n))
+    max_valor_asp <- max(asp_incendios_filtradas$incendios_n, na.rm = TRUE)
+    
+    if (valores_unicos_asp > 1 && max_valor_asp > 0) {
+      # Si hay variación y no todos son 0, usar escala de intervalos
+      mapa <- mapa +
+        tm_shape(asp_incendios_filtradas, name = "ASP") +
+          tm_polygons(
+            fill = "incendios_n",
+            fill.scale = tm_scale_intervals(
+              style = "pretty", 
+              values = "brewer.greens",
+              n = min(5, valores_unicos_asp)
+            ),
+            fill.legend = tm_legend(title = "Incendios en ASP"),
+            fill_alpha = 0.4,
+            id = "nombre_asp",
+            popup.vars = c("ASP" = "nombre_asp", "Incendios" = "incendios_n")
+          ) +
+          tm_borders(col = "darkblue", lwd = 1.2)
+    } else {
+      # Si todos los valores son iguales o todos son 0, usar color fijo
+      mapa <- mapa +
+        tm_shape(asp_incendios_filtradas, name = "ASP") +
+          tm_polygons(
+            fill = "#e5f5e0", # color fijo (verde muy claro)
+            fill_alpha = 0.4,
+            id = "nombre_asp",
+            popup.vars = c("ASP" = "nombre_asp", "Incendios" = "incendios_n")
+          ) +
+          tm_borders(col = "darkblue", lwd = 1.2)
+    }
+  }
+
+  # Agregar capa de incendios solo si hay datos
+  if (nrow(incendios_filtrados) > 0) {
+    # Verificar variabilidad en FRP
+    valores_unicos_frp <- length(unique(incendios_filtrados$frp))
+    
+    if (valores_unicos_frp > 1) {
+      # Si hay variación en FRP, usar escala de intervalos
+      mapa <- mapa +
+        tm_shape(incendios_filtrados, name = "Incendios") +
+        tm_dots(
+          fill = "frp",
+          fill.scale = tm_scale_intervals(
+            style = "quantile",
+            values = "inferno",
+            n = min(5, valores_unicos_frp)
+          ),
+          fill.legend = tm_legend(title = "FRP (MW)"),
+          size = 0.5,
+          popup.vars = c(
+            "AC" = "nombre_ac", "ASP" = "nombre_asp",            
+            "Fecha" = "acq_date", "Hora" = "acq_time",
+            "FRP (MW)" = "frp", "Brillantez" = "brightness",
+            "Confianza" = "confidence", 
+            "Temperatura a 2m (°C)" = "TEMPERATURE_2M_ACQ_DATE_MEAN",
+            "Precipitación (mm)" = "PRECIPITATION_ACQ_DATE_SUM",
+            "Velocidad del viento (m/s)" = "X10M_WIND_SPEED_ACQ_DATE_MEAN",
+            "Dirección del viento (°)" = "X10M_WIND_DIRECTION_ACQ_DATE_MEAN"
+          )
+        )
+    } else {
+      # Si todos los valores de FRP son iguales, usar color fijo
+      mapa <- mapa +
+        tm_shape(incendios_filtrados, name = "Incendios") +
+          tm_dots(
+            fill = "red",  
+            size = 0.5,
+            popup.vars = c(
+            "AC" = "nombre_ac", "ASP" = "nombre_asp",            
+            "Fecha" = "acq_date", "Hora" = "acq_time",
+            "FRP (MW)" = "frp", "Brillantez" = "brightness",
+            "Confianza" = "confidence", 
+            "Temperatura a 2m (°C)" = "TEMPERATURE_2M_ACQ_DATE_MEAN",
+            "Precipitación (mm)" = "PRECIPITATION_ACQ_DATE_SUM",
+            "Velocidad del viento (m/s)" = "X10M_WIND_SPEED_ACQ_DATE_MEAN",
+            "Dirección del viento (°)" = "X10M_WIND_DIRECTION_ACQ_DATE_MEAN"
+            )
+          )
+    }
+  }
+  
+  # Agregar elementos de control del mapa
+  mapa +
+    tm_scalebar(position = c("left", "bottom")) +
+    tm_compass(position = c("right", "top"))
+})
+```
