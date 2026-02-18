@@ -3464,5 +3464,6 @@ output$mapa <- renderTmap({
   mapa +
     tm_scalebar(position = c("left", "bottom")) +
     tm_compass(position = c("right", "top"))
-})
+}) 
 ```
+
